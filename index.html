@@ -1,6 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Supabase Funding Test</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 500px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f7f7f7;
+    }
+
+    .box {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.08);
+    }
+
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      box-sizing: border-box;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+
+    button {
+      cursor: pointer;
+      background: #111;
+      color: white;
+      border: none;
+    }
+
+    button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #f1f1f1;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="box">
+    <h2>Supabase Funding Test</h2>
+
+    <input
+      id="email"
+      type="email"
+      placeholder="Test user email"
+      value="praiseboutique74@gmail.com"
+    >
+
+    <input
+      id="password"
+      type="password"
+      placeholder="Test user password"
+    >
+
+    <button id="loginBtn">
+      Sign In
+    </button>
+
+    <button id="fundBtn" disabled>
+      Create $1,000 Virtual Deposit
+    </button>
+
+    <pre id="output">Waiting...</pre>
+  </div>
+
 <script>
 const SUPABASE_URL = 'https://ugplolnnklwiymryduii.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_2es_s2SFatFs0WrOC6ipnw_pqwyfIW1';
+
+const SUPABASE_ANON_KEY =
+  'sb_publishable_2es_s2SFatFs0WrOC6ipnw_pqwyfIW1';
 
 const supabase = window.supabase.createClient(
   SUPABASE_URL,
@@ -24,10 +113,11 @@ loginBtn.addEventListener('click', async () => {
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password
-  });
+  const { data, error } =
+    await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
 
   if (error) {
     show({
@@ -80,3 +170,6 @@ fundBtn.addEventListener('click', async () => {
   });
 });
 </script>
+
+</body>
+</html>
