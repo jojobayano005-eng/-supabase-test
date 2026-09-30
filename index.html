@@ -1,0 +1,82 @@
+<script>
+const SUPABASE_URL = 'https://ugplolnnklwiymryduii.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_2es_s2SFatFs0WrOC6ipnw_pqwyfIW1';
+
+const supabase = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+);
+
+const output = document.getElementById('output');
+const loginBtn = document.getElementById('loginBtn');
+const fundBtn = document.getElementById('fundBtn');
+
+function show(message) {
+  output.textContent =
+    typeof message === 'string'
+      ? message
+      : JSON.stringify(message, null, 2);
+}
+
+loginBtn.addEventListener('click', async () => {
+  show('Signing in...');
+
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    show({
+      step: 'LOGIN',
+      success: false,
+      error: error.message
+    });
+    return;
+  }
+
+  fundBtn.disabled = false;
+
+  show({
+    step: 'LOGIN',
+    success: true,
+    user_id: data.user.id,
+    email: data.user.email
+  });
+});
+
+fundBtn.addEventListener('click', async () => {
+  show('Creating $1,000 virtual funding request...');
+
+  const { data, error } = await supabase.rpc(
+    'create_funding_request',
+    {
+      p_type: 'deposit',
+      p_amount: 1000,
+      p_currency: 'USD',
+      p_idempotency_key: 'TEST-DEPOSIT-001',
+      p_note: 'End-to-end paper funding test'
+    }
+  );
+
+  if (error) {
+    show({
+      step: 'FUNDING_REQUEST',
+      success: false,
+      error: error.message,
+      details: error.details,
+      hint: error.hint
+    });
+    return;
+  }
+
+  show({
+    step: 'FUNDING_REQUEST',
+    success: true,
+    funding_request_id: data
+  });
+});
+</script>
