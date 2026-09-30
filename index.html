@@ -5,96 +5,93 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Supabase Funding Test</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <style>
     body {
       font-family: Arial, sans-serif;
       max-width: 500px;
       margin: 40px auto;
       padding: 20px;
-      background: #f7f7f7;
+      background: #f5f5f5;
     }
 
     .box {
       background: white;
       padding: 20px;
       border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,.08);
     }
 
     input, button {
       width: 100%;
-      padding: 12px;
+      padding: 14px;
       margin: 8px 0;
       box-sizing: border-box;
-      border-radius: 8px;
-      border: 1px solid #ccc;
       font-size: 16px;
+      border-radius: 8px;
+    }
+
+    input {
+      border: 1px solid #ccc;
     }
 
     button {
-      cursor: pointer;
+      border: 0;
       background: #111;
       color: white;
-      border: none;
     }
 
     button:disabled {
       opacity: .5;
-      cursor: not-allowed;
     }
 
     pre {
       white-space: pre-wrap;
       word-break: break-word;
-      background: #f1f1f1;
+      background: #eee;
       padding: 12px;
       border-radius: 8px;
-      margin-top: 15px;
     }
   </style>
 </head>
 
 <body>
 
-  <div class="box">
-    <h2>Supabase Funding Test</h2>
+<div class="box">
 
-    <input
-      id="email"
-      type="email"
-      placeholder="Test user email"
-      value="praiseboutique74@gmail.com"
-    >
+  <h2>Supabase Funding Test</h2>
 
-    <input
-      id="password"
-      type="password"
-      placeholder="Test user password"
-    >
+  <input
+    id="email"
+    type="email"
+    value="praiseboutique74@gmail.com"
+    placeholder="Email"
+  >
 
-    <button id="loginBtn">
-      Sign In
-    </button>
+  <input
+    id="password"
+    type="password"
+    placeholder="Password"
+  >
 
-    <button id="fundBtn" disabled>
-      Create $1,000 Virtual Deposit
-    </button>
+  <button id="loginBtn" type="button">
+    Sign In
+  </button>
 
-    <pre id="output">Waiting...</pre>
-  </div>
+  <button id="fundBtn" type="button" disabled>
+    Create $1,000 Virtual Deposit
+  </button>
+
+  <pre id="output">Loading...</pre>
+
+</div>
 
 <script>
-const SUPABASE_URL = 'https://ugplolnnklwiymryduii.supabase.co';
+const SUPABASE_URL =
+  'https://ugplolnnklwiymryduii.supabase.co';
 
 const SUPABASE_ANON_KEY =
   'sb_publishable_2es_s2SFatFs0WrOC6ipnw_pqwyfIW1';
 
-const supabase = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY
-);
+let supabaseClient = null;
 
 const output = document.getElementById('output');
 const loginBtn = document.getElementById('loginBtn');
@@ -107,68 +104,151 @@ function show(message) {
       : JSON.stringify(message, null, 2);
 }
 
-loginBtn.addEventListener('click', async () => {
+function startApp() {
+
+  if (!window.supabase) {
+    show({
+      step: 'STARTUP',
+      success: false,
+      error: 'Supabase library did not load.'
+    });
+    return;
+  }
+
+  supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+  );
+
+  show('Ready. Enter your password and tap Sign In.');
+}
+
+loginBtn.addEventListener('click', async function () {
+
   show('Signing in...');
 
-  const email = document.getElementById('email').value.trim();
-  const password = document.getElementById('password').value;
-
-  const { data, error } =
-    await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-
-  if (error) {
+  if (!supabaseClient) {
     show({
       step: 'LOGIN',
       success: false,
-      error: error.message
+      error: 'Supabase client is not ready.'
     });
     return;
   }
 
-  fundBtn.disabled = false;
+  const email =
+    document.getElementById('email').value.trim();
 
-  show({
-    step: 'LOGIN',
-    success: true,
-    user_id: data.user.id,
-    email: data.user.email
-  });
+  const password =
+    document.getElementById('password').value;
+
+  if (!email || !password) {
+    show({
+      step: 'LOGIN',
+      success: false,
+      error: 'Email and password are required.'
+    });
+    return;
+  }
+
+  try {
+
+    const result =
+      await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+    const data = result.data;
+    const error = result.error;
+
+    if (error) {
+      show({
+        step: 'LOGIN',
+        success: false,
+        error: error.message,
+        details: error.details,
+        hint: error.hint
+      });
+      return;
+    }
+
+    fundBtn.disabled = false;
+
+    show({
+      step: 'LOGIN',
+      success: true,
+      user_id: data.user.id,
+      email: data.user.email
+    });
+
+  } catch (err) {
+
+    show({
+      step: 'LOGIN',
+      success: false,
+      error: String(err)
+    });
+
+  }
+
 });
 
-fundBtn.addEventListener('click', async () => {
+fundBtn.addEventListener('click', async function () {
+
   show('Creating $1,000 virtual funding request...');
 
-  const { data, error } = await supabase.rpc(
-    'create_funding_request',
-    {
-      p_type: 'deposit',
-      p_amount: 1000,
-      p_currency: 'USD',
-      p_idempotency_key: 'TEST-DEPOSIT-001',
-      p_note: 'End-to-end paper funding test'
-    }
-  );
+  try {
 
-  if (error) {
+    const result =
+      await supabaseClient.rpc(
+        'create_funding_request',
+        {
+          p_type: 'deposit',
+          p_amount: 1000,
+          p_currency: 'USD',
+          p_idempotency_key: 'TEST-DEPOSIT-001',
+          p_note: 'End-to-end paper funding test'
+        }
+      );
+
+    const data = result.data;
+    const error = result.error;
+
+    if (error) {
+      show({
+        step: 'FUNDING_REQUEST',
+        success: false,
+        error: error.message,
+        details: error.details,
+        hint: error.hint
+      });
+      return;
+    }
+
+    show({
+      step: 'FUNDING_REQUEST',
+      success: true,
+      funding_request_id: data
+    });
+
+  } catch (err) {
+
     show({
       step: 'FUNDING_REQUEST',
       success: false,
-      error: error.message,
-      details: error.details,
-      hint: error.hint
+      error: String(err)
     });
-    return;
+
   }
 
-  show({
-    step: 'FUNDING_REQUEST',
-    success: true,
-    funding_request_id: data
-  });
 });
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startApp);
+} else {
+  startApp();
+}
 </script>
 
 </body>
