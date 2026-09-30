@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
 
-  <title>Apex Wealth Paper Trading Test</title>
+  <title>Apex Wealth Admin Execution Test</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -44,27 +44,31 @@
 
 <body>
 
-<h2>Apex Wealth — Paper Trading Test</h2>
+<h2>Apex Wealth — Admin Execution Test</h2>
+
+<p>
+  Temporary test page for the paper-trading execution workflow.
+</p>
 
 <input
   id="email"
   type="email"
-  value="praiseboutique74@gmail.com"
-  placeholder="Customer email"
+  value="mendozavalerie275@gmail.com"
+  placeholder="Admin email"
 >
 
 <input
   id="password"
   type="password"
-  placeholder="Customer password"
+  placeholder="Admin password"
 >
 
 <button onclick="login()">
-  Sign In
+  Sign In as Admin
 </button>
 
-<button onclick="createAAPLOrder()">
-  Create 1 AAPL Paper Buy @ $225.10
+<button onclick="executeOrder()">
+  Execute AAPL Paper Order
 </button>
 
 <pre id="output">Loading...</pre>
@@ -76,6 +80,9 @@ const SUPABASE_URL =
 
 const SUPABASE_KEY =
   'sb_publishable_2es_s2SFatFs0WrOC6ipnw_pqwyfIW1';
+
+const ORDER_ID =
+  'b6281f82-1245-45bb-b8fc-f8ccd456b4d2';
 
 let client = null;
 
@@ -118,7 +125,7 @@ async function login() {
   const password =
     document.getElementById('password').value;
 
-  show('Signing in...');
+  show('Signing in as admin...');
 
   const { data, error } =
     await client.auth.signInWithPassword({
@@ -139,32 +146,30 @@ async function login() {
     step: 'LOGIN',
     success: true,
     user_id: data.user.id,
-    email: data.user.email
+    email: data.user.email,
+    message: 'Admin authentication successful.'
   });
 }
 
 
-async function createAAPLOrder() {
+async function executeOrder() {
 
-  show('Creating AAPL paper order...');
+  show('Executing AAPL paper order...');
 
   const { data, error } =
     await client.rpc(
-      'create_order',
+      'execute_order',
       {
-        p_symbol: 'AAPL',
-        p_side: 'buy',
-        p_quantity: 1,
-        p_limit_price: 225.10,
-        p_idempotency_key: 'TEST-AAPL-BUY-001',
-        p_take_profit: null,
-        p_stop_loss: null
+        p_order_id: ORDER_ID,
+        p_execution_price: 225.10,
+        p_execution_quantity: 1,
+        p_idempotency_key: 'TEST-AAPL-EXECUTION-001'
       }
     );
 
   if (error) {
     show({
-      step: 'CREATE_ORDER',
+      step: 'EXECUTION',
       success: false,
       error: error.message,
       details: error.details,
@@ -174,9 +179,15 @@ async function createAAPLOrder() {
   }
 
   show({
-    step: 'CREATE_ORDER',
+    step: 'EXECUTION',
     success: true,
-    order_id: data
+    execution_id: data,
+    order_id: ORDER_ID,
+    symbol: 'AAPL',
+    side: 'buy',
+    quantity: 1,
+    execution_price: 225.10,
+    total: 225.10
   });
 }
 
