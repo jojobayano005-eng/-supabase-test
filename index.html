@@ -4,72 +4,130 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
 
-  <title>Apex Wealth Admin Execution Test</title>
+  <title>Supabase Paper Trading Test</title>
 
-  <script
-    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     body {
       font-family: Arial, sans-serif;
-      max-width: 600px;
-      margin: 30px auto;
-      padding: 20px;
-      background: #111;
-      color: white;
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 24px;
+      background: #f5f5f5;
+      color: #111;
     }
 
-    input, button {
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.08);
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    input,
+    button {
       width: 100%;
       box-sizing: border-box;
       padding: 13px;
       margin: 7px 0;
       border-radius: 8px;
-      font-size: 16px;
+      border: 1px solid #ccc;
+      font-size: 15px;
     }
 
     button {
       cursor: pointer;
-      font-weight: bold;
+      background: #111;
+      color: white;
+      border: none;
+    }
+
+    button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .danger {
+      background: #b00020;
+    }
+
+    .secondary {
+      background: #555;
     }
 
     pre {
-      background: #000;
-      padding: 15px;
-      border-radius: 8px;
       white-space: pre-wrap;
       word-break: break-word;
+      background: #f0f0f0;
+      padding: 14px;
+      border-radius: 8px;
+      margin-top: 15px;
+      min-height: 70px;
+    }
+
+    .status {
+      padding: 10px;
+      background: #eee;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-size: 14px;
     }
   </style>
 </head>
 
 <body>
 
-<h2>Apex Wealth — Admin Execution Test</h2>
+<div class="card">
 
-<input
-  id="email"
-  type="email"
-  value="mendozavalerie275@gmail.com"
-  placeholder="Admin email"
->
+  <h2>Supabase Paper Trading Test</h2>
 
-<input
-  id="password"
-  type="password"
-  placeholder="Admin password"
->
+  <div id="status" class="status">
+    Loading...
+  </div>
 
-<button id="loginBtn">
-  Sign In as Admin
-</button>
+  <input
+    id="email"
+    type="email"
+    placeholder="Email"
+    value="praiseboutique74@gmail.com"
+  >
 
-<button id="executeBtn" disabled>
-  Execute AAPL Paper Order
-</button>
+  <input
+    id="password"
+    type="password"
+    placeholder="Password"
+  >
 
-<pre id="output">Starting...</pre>
+  <button id="loginBtn">
+    Sign In
+  </button>
+
+  <button id="logoutBtn" class="danger" disabled>
+    Sign Out
+  </button>
+
+  <hr>
+
+  <button id="fundBtn" disabled>
+    Create $1,000 Virtual Deposit
+  </button>
+
+  <button id="approveBtn" disabled>
+    Admin Approve $1,000 Virtual Deposit
+  </button>
+
+  <button id="executeBtn" disabled>
+    Execute AAPL Paper Order
+  </button>
+
+  <pre id="output">Waiting...</pre>
+
+</div>
 
 <script>
 
@@ -80,19 +138,52 @@ const SUPABASE_PUBLISHABLE_KEY =
   'sb_publishable_2es_s2SFatFs0WrOC6ipnw_pqwyfIW1';
 
 let supabaseClient = null;
+let currentUser = null;
+
+
+/* -------------------------------------------------------
+   EXISTING TEST DATA
+------------------------------------------------------- */
+
+const CUSTOMER_USER_ID =
+  'd0813e84-5ea6-44ee-b733-8f74813bad28';
+
+const TEST_FUNDING_REQUEST_ID =
+  '69802d8d-cd29-4a7a-b1c1-1e29e09fb316';
+
+const TEST_ORDER_ID =
+  'b6281f82-1245-45bb-b8fc-f8ccd456b4d2';
+
+
+/* -------------------------------------------------------
+   ELEMENTS
+------------------------------------------------------- */
 
 const output =
   document.getElementById('output');
 
+const statusBox =
+  document.getElementById('status');
+
 const loginBtn =
   document.getElementById('loginBtn');
+
+const logoutBtn =
+  document.getElementById('logoutBtn');
+
+const fundBtn =
+  document.getElementById('fundBtn');
+
+const approveBtn =
+  document.getElementById('approveBtn');
 
 const executeBtn =
   document.getElementById('executeBtn');
 
-const ORDER_ID =
-  'b6281f82-1245-45bb-b8fc-f8ccd456b4d2';
 
+/* -------------------------------------------------------
+   DISPLAY HELPERS
+------------------------------------------------------- */
 
 function show(message) {
 
@@ -104,45 +195,138 @@ function show(message) {
 }
 
 
+function setStatus(message) {
+
+  statusBox.textContent = message;
+
+}
+
+
+/* -------------------------------------------------------
+   BUTTON STATE
+------------------------------------------------------- */
+
+function updateButtons() {
+
+  const loggedIn = !!currentUser;
+
+  loginBtn.disabled = loggedIn;
+  logoutBtn.disabled = !loggedIn;
+
+  fundBtn.disabled = !loggedIn;
+  approveBtn.disabled = !loggedIn;
+  executeBtn.disabled = !loggedIn;
+
+}
+
+
+/* -------------------------------------------------------
+   INITIALIZE SUPABASE
+------------------------------------------------------- */
+
 function startApp() {
 
   if (!window.supabase) {
 
+    setStatus('Supabase library failed to load.');
+
     show({
       step: 'STARTUP',
       success: false,
-      error: 'Supabase JavaScript library did not load.'
+      error: 'Supabase library did not load.'
     });
 
     return;
   }
 
+
+  supabaseClient =
+    window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  setStatus(
+    'Supabase ready. Sign in to continue.'
+  );
+
+
+  updateButtons();
+
+
+  restoreSession();
+
+}
+
+
+/* -------------------------------------------------------
+   RESTORE EXISTING SESSION
+------------------------------------------------------- */
+
+async function restoreSession() {
+
   try {
 
-    supabaseClient =
-      window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_PUBLISHABLE_KEY
+    const {
+      data,
+      error
+    } =
+      await supabaseClient.auth.getSession();
+
+
+    if (error) {
+
+      setStatus('Unable to restore session.');
+
+      return;
+    }
+
+
+    if (data.session) {
+
+      currentUser =
+        data.session.user;
+
+      setStatus(
+        'Signed in as: ' +
+        currentUser.email
       );
 
-    show({
-      step: 'STARTUP',
-      success: true,
-      message: 'Supabase client is ready.'
-    });
+      show({
+        step: 'SESSION_RESTORED',
+        success: true,
+        user_id: currentUser.id,
+        email: currentUser.email
+      });
 
-  } catch (error) {
+    } else {
+
+      setStatus(
+        'Not signed in.'
+      );
+
+    }
+
+
+    updateButtons();
+
+  } catch (err) {
 
     show({
-      step: 'STARTUP',
+      step: 'SESSION',
       success: false,
-      error: String(error)
+      error: String(err)
     });
 
   }
 
 }
 
+
+/* -------------------------------------------------------
+   SIGN IN
+------------------------------------------------------- */
 
 loginBtn.addEventListener(
   'click',
@@ -159,38 +343,46 @@ loginBtn.addEventListener(
       return;
     }
 
+
     const email =
-      document.getElementById('email')
+      document
+        .getElementById('email')
         .value
         .trim();
 
     const password =
-      document.getElementById('password')
+      document
+        .getElementById('password')
         .value;
+
 
     if (!email || !password) {
 
       show({
         step: 'LOGIN',
         success: false,
-        error: 'Email and password are required.'
+        error:
+          'Email and password are required.'
       });
 
       return;
     }
 
-    show('Signing in as admin...');
+
+    show('Signing in...');
+
 
     try {
 
-      const result =
+      const {
+        data,
+        error
+      } =
         await supabaseClient.auth.signInWithPassword({
-          email: email,
-          password: password
+          email,
+          password
         });
 
-      const data = result.data;
-      const error = result.error;
 
       if (error) {
 
@@ -205,22 +397,33 @@ loginBtn.addEventListener(
         return;
       }
 
-      executeBtn.disabled = false;
+
+      currentUser =
+        data.user;
+
+
+      setStatus(
+        'Signed in as: ' +
+        currentUser.email
+      );
+
 
       show({
         step: 'LOGIN',
         success: true,
-        user_id: data.user.id,
-        email: data.user.email,
-        message: 'Admin authentication successful.'
+        user_id: currentUser.id,
+        email: currentUser.email
       });
 
-    } catch (error) {
+
+      updateButtons();
+
+    } catch (err) {
 
       show({
         step: 'LOGIN',
         success: false,
-        error: String(error)
+        error: String(err)
       });
 
     }
@@ -229,28 +432,285 @@ loginBtn.addEventListener(
 );
 
 
+/* -------------------------------------------------------
+   SIGN OUT
+------------------------------------------------------- */
+
+logoutBtn.addEventListener(
+  'click',
+  async function () {
+
+    if (!supabaseClient) {
+
+      return;
+    }
+
+
+    show('Signing out...');
+
+
+    try {
+
+      const {
+        error
+      } =
+        await supabaseClient.auth.signOut();
+
+
+      if (error) {
+
+        show({
+          step: 'LOGOUT',
+          success: false,
+          error: error.message
+        });
+
+        return;
+      }
+
+
+      currentUser = null;
+
+
+      setStatus(
+        'Signed out successfully.'
+      );
+
+
+      show({
+        step: 'LOGOUT',
+        success: true,
+        message:
+          'Supabase session cleared.'
+      });
+
+
+      updateButtons();
+
+    } catch (err) {
+
+      show({
+        step: 'LOGOUT',
+        success: false,
+        error: String(err)
+      });
+
+    }
+
+  }
+);
+
+
+/* -------------------------------------------------------
+   CREATE FUNDING REQUEST
+------------------------------------------------------- */
+
+fundBtn.addEventListener(
+  'click',
+  async function () {
+
+    if (!currentUser) {
+
+      show({
+        step: 'FUNDING_REQUEST',
+        success: false,
+        error:
+          'You must sign in first.'
+      });
+
+      return;
+    }
+
+
+    show(
+      'Creating $1,000 virtual funding request...'
+    );
+
+
+    try {
+
+      const {
+        data,
+        error
+      } =
+        await supabaseClient.rpc(
+          'create_funding_request',
+          {
+            p_type: 'deposit',
+            p_amount: 1000,
+            p_currency: 'USD',
+            p_idempotency_key:
+              'TEST-DEPOSIT-NEW-' +
+              Date.now(),
+            p_note:
+              'End-to-end paper funding test'
+          }
+        );
+
+
+      if (error) {
+
+        show({
+          step: 'FUNDING_REQUEST',
+          success: false,
+          error: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+
+        return;
+      }
+
+
+      show({
+        step: 'FUNDING_REQUEST',
+        success: true,
+        funding_request_id: data
+      });
+
+    } catch (err) {
+
+      show({
+        step: 'FUNDING_REQUEST',
+        success: false,
+        error: String(err)
+      });
+
+    }
+
+  }
+);
+
+
+/* -------------------------------------------------------
+   ADMIN APPROVAL
+------------------------------------------------------- */
+
+approveBtn.addEventListener(
+  'click',
+  async function () {
+
+    if (!currentUser) {
+
+      show({
+        step: 'FUNDING_APPROVAL',
+        success: false,
+        error:
+          'You must sign in first.'
+      });
+
+      return;
+    }
+
+
+    show(
+      'Approving the existing $1,000 virtual deposit...'
+    );
+
+
+    try {
+
+      const {
+        data,
+        error
+      } =
+        await supabaseClient.rpc(
+          'admin_review_funding',
+          {
+            p_request_id:
+              TEST_FUNDING_REQUEST_ID,
+
+            p_status:
+              'approved'
+          }
+        );
+
+
+      if (error) {
+
+        show({
+          step: 'FUNDING_APPROVAL',
+          success: false,
+          error: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+
+        return;
+      }
+
+
+      show({
+        step: 'FUNDING_APPROVAL',
+        success: true,
+        result: data,
+        funding_request_id:
+          TEST_FUNDING_REQUEST_ID
+      });
+
+    } catch (err) {
+
+      show({
+        step: 'FUNDING_APPROVAL',
+        success: false,
+        error: String(err)
+      });
+
+    }
+
+  }
+);
+
+
+/* -------------------------------------------------------
+   EXECUTE EXISTING AAPL ORDER
+------------------------------------------------------- */
+
 executeBtn.addEventListener(
   'click',
   async function () {
 
-    show('Executing AAPL paper order...');
+    if (!currentUser) {
+
+      show({
+        step: 'EXECUTION',
+        success: false,
+        error:
+          'You must sign in first.'
+      });
+
+      return;
+    }
+
+
+    show(
+      'Executing existing AAPL paper order...'
+    );
+
 
     try {
 
-      const result =
+      const {
+        data,
+        error
+      } =
         await supabaseClient.rpc(
           'execute_order',
           {
-            p_order_id: ORDER_ID,
-            p_execution_price: 225.10,
-            p_execution_quantity: 1,
+            p_order_id:
+              TEST_ORDER_ID,
+
+            p_execution_price:
+              225.10,
+
+            p_execution_quantity:
+              1,
+
             p_idempotency_key:
               'TEST-AAPL-EXECUTION-001'
           }
         );
 
-      const data = result.data;
-      const error = result.error;
 
       if (error) {
 
@@ -265,11 +725,13 @@ executeBtn.addEventListener(
         return;
       }
 
+
       show({
         step: 'EXECUTION',
         success: true,
         execution_id: data,
-        order_id: ORDER_ID,
+        order_id:
+          TEST_ORDER_ID,
         symbol: 'AAPL',
         side: 'buy',
         quantity: 1,
@@ -277,12 +739,12 @@ executeBtn.addEventListener(
         total: 225.10
       });
 
-    } catch (error) {
+    } catch (err) {
 
       show({
         step: 'EXECUTION',
         success: false,
-        error: String(error)
+        error: String(err)
       });
 
     }
@@ -291,18 +753,72 @@ executeBtn.addEventListener(
 );
 
 
+/* -------------------------------------------------------
+   AUTH STATE LISTENER
+------------------------------------------------------- */
+
+function registerAuthListener() {
+
+  if (!supabaseClient) {
+
+    return;
+  }
+
+
+  supabaseClient.auth.onAuthStateChange(
+    function (event, session) {
+
+      if (session) {
+
+        currentUser =
+          session.user;
+
+        setStatus(
+          'Signed in as: ' +
+          currentUser.email
+        );
+
+      } else {
+
+        currentUser = null;
+
+        setStatus(
+          'Not signed in.'
+        );
+
+      }
+
+
+      updateButtons();
+
+    }
+  );
+
+}
+
+
+/* -------------------------------------------------------
+   START
+------------------------------------------------------- */
+
 if (
   document.readyState === 'loading'
 ) {
 
   document.addEventListener(
     'DOMContentLoaded',
-    startApp
+    function () {
+
+      startApp();
+      registerAuthListener();
+
+    }
   );
 
 } else {
 
   startApp();
+  registerAuthListener();
 
 }
 
