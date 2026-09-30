@@ -3,14 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Supabase Funding Test</title>
-
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <title>Apex Wealth - Admin Funding Test</title>
 
   <style>
     body {
       font-family: Arial, sans-serif;
-      max-width: 500px;
+      max-width: 520px;
       margin: 40px auto;
       padding: 20px;
       background: #f5f5f5;
@@ -39,10 +37,12 @@
       border: 0;
       background: #111;
       color: white;
+      cursor: pointer;
     }
 
     button:disabled {
       opacity: .5;
+      cursor: not-allowed;
     }
 
     pre {
@@ -51,6 +51,7 @@
       background: #eee;
       padding: 12px;
       border-radius: 8px;
+      margin-top: 15px;
     }
   </style>
 </head>
@@ -59,27 +60,31 @@
 
 <div class="box">
 
-  <h2>Supabase Funding Test</h2>
+  <h2>Apex Wealth — Admin Funding Test</h2>
+
+  <p>
+    This is a temporary test page for the paper/virtual funding workflow.
+  </p>
 
   <input
     id="email"
     type="email"
-    value="praiseboutique74@gmail.com"
-    placeholder="Email"
+    value="mendozavalerie275@gmail.com"
+    placeholder="Admin email"
   >
 
   <input
     id="password"
     type="password"
-    placeholder="Password"
+    placeholder="Admin password"
   >
 
   <button id="loginBtn" type="button">
-    Sign In
+    Sign In as Admin
   </button>
 
-  <button id="fundBtn" type="button" disabled>
-    Create $1,000 Virtual Deposit
+  <button id="approveBtn" type="button" disabled>
+    Approve $1,000 Virtual Deposit
   </button>
 
   <pre id="output">Loading...</pre>
@@ -93,11 +98,19 @@ const SUPABASE_URL =
 const SUPABASE_ANON_KEY =
   'sb_publishable_2es_s2SFatFs0WrOC6ipnw_pqwyfIW1';
 
+const FUNDING_REQUEST_ID =
+  '69802d8d-cd29-4a7a-b1c1-1e29e09fb316';
+
 let supabaseClient = null;
 
-const output = document.getElementById('output');
-const loginBtn = document.getElementById('loginBtn');
-const fundBtn = document.getElementById('fundBtn');
+const output =
+  document.getElementById('output');
+
+const loginBtn =
+  document.getElementById('loginBtn');
+
+const approveBtn =
+  document.getElementById('approveBtn');
 
 function show(message) {
   output.textContent =
@@ -117,128 +130,141 @@ function startApp() {
     return;
   }
 
-  supabaseClient = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-  );
+  supabaseClient =
+    window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    );
 
-  show('Ready. Enter your password and tap Sign In.');
+  show(
+    'Ready. Sign in with the admin test account.'
+  );
 }
 
-loginBtn.addEventListener('click', async function () {
+loginBtn.addEventListener(
+  'click',
+  async function () {
 
-  show('Signing in...');
+    show('Signing in as admin...');
 
-  if (!supabaseClient) {
-    show({
-      step: 'LOGIN',
-      success: false,
-      error: 'Supabase client is not ready.'
-    });
-    return;
-  }
-
-  const email =
-    document.getElementById('email').value.trim();
-
-  const password =
-    document.getElementById('password').value;
-
-  if (!email || !password) {
-    show({
-      step: 'LOGIN',
-      success: false,
-      error: 'Email and password are required.'
-    });
-    return;
-  }
-
-  try {
-
-    const { data, error } =
-      await supabaseClient.auth.signInWithPassword({
-        email: email,
-        password: password
-      });
-
-    if (error) {
+    if (!supabaseClient) {
       show({
         step: 'LOGIN',
         success: false,
-        error: error.message,
-        details: error.details,
-        hint: error.hint
+        error: 'Supabase client is not ready.'
       });
       return;
     }
 
-    fundBtn.disabled = false;
+    const email =
+      document.getElementById('email')
+        .value.trim();
 
-    show({
-      step: 'LOGIN',
-      success: true,
-      user_id: data.user.id,
-      email: data.user.email
-    });
+    const password =
+      document.getElementById('password')
+        .value;
 
-  } catch (err) {
-
-    show({
-      step: 'LOGIN',
-      success: false,
-      error: String(err)
-    });
-
-  }
-
-});
-
-fundBtn.addEventListener('click', async function () {
-
-  show('Creating $1,000 virtual funding request...');
-
-  try {
-
-    const { data, error } =
-      await supabaseClient.rpc(
-        'create_funding_request',
-        {
-          p_type: 'deposit',
-          p_amount: 1000,
-          p_currency: 'USD',
-          p_idempotency_key: 'TEST-DEPOSIT-001',
-          p_note: 'End-to-end paper funding test'
-        }
-      );
-
-    if (error) {
+    if (!email || !password) {
       show({
-        step: 'FUNDING_REQUEST',
+        step: 'LOGIN',
         success: false,
-        error: error.message,
-        details: error.details,
-        hint: error.hint
+        error: 'Email and password are required.'
       });
       return;
     }
 
-    show({
-      step: 'FUNDING_REQUEST',
-      success: true,
-      funding_request_id: data
-    });
+    try {
 
-  } catch (err) {
+      const { data, error } =
+        await supabaseClient.auth
+          .signInWithPassword({
+            email: email,
+            password: password
+          });
 
-    show({
-      step: 'FUNDING_REQUEST',
-      success: false,
-      error: String(err)
-    });
+      if (error) {
+        show({
+          step: 'LOGIN',
+          success: false,
+          error: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        return;
+      }
 
+      approveBtn.disabled = false;
+
+      show({
+        step: 'LOGIN',
+        success: true,
+        user_id: data.user.id,
+        email: data.user.email,
+        message: 'Authenticated admin session established.'
+      });
+
+    } catch (err) {
+
+      show({
+        step: 'LOGIN',
+        success: false,
+        error: String(err)
+      });
+
+    }
   }
+);
 
-});
+approveBtn.addEventListener(
+  'click',
+  async function () {
+
+    show(
+      'Approving $1,000 virtual funding request...'
+    );
+
+    try {
+
+      const { data, error } =
+        await supabaseClient.rpc(
+          'admin_review_funding',
+          {
+            p_request_id: FUNDING_REQUEST_ID,
+            p_status: 'approved'
+          }
+        );
+
+      if (error) {
+        show({
+          step: 'ADMIN_REVIEW_FUNDING',
+          success: false,
+          error: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        return;
+      }
+
+      show({
+        step: 'ADMIN_REVIEW_FUNDING',
+        success: true,
+        result: data,
+        funding_request_id: FUNDING_REQUEST_ID,
+        message:
+          'Funding request approval RPC completed successfully.'
+      });
+
+    } catch (err) {
+
+      show({
+        step: 'ADMIN_REVIEW_FUNDING',
+        success: false,
+        error: String(err)
+      });
+
+    }
+  }
+);
 
 startApp();
 </script>
