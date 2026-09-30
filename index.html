@@ -3,24 +3,125 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Apex Test</title>
+  <title>Apex Wealth — Supabase Test</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
 
-<h1>APEX WEALTH TEST</h1>
+<h1>APEX WEALTH</h1>
 
-<button onclick="testButton()">
-  TEST BUTTON
+<input
+  id="email"
+  type="email"
+  value="praiseboutique74@gmail.com"
+  placeholder="Email"
+>
+
+<br><br>
+
+<input
+  id="password"
+  type="password"
+  placeholder="Password"
+>
+
+<br><br>
+
+<button id="login">
+  Sign In
 </button>
 
 <pre id="output">Waiting...</pre>
 
 <script>
-function testButton() {
-  document.getElementById("output").textContent =
-    "JAVASCRIPT IS WORKING";
-}
+
+const SUPABASE_URL =
+  'https://ugplolnnklwiymryduii.supabase.co';
+
+const SUPABASE_PUBLISHABLE_KEY =
+  'sb_publishable_2es_s2SFatFs0WrOC6ipnw_pqwyfIW1';
+
+const supabaseClient =
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+  );
+
+
+document
+  .getElementById('login')
+  .addEventListener('click', async function () {
+
+    document.getElementById('output').textContent =
+      'Attempting login...';
+
+
+    const email =
+      document.getElementById('email').value.trim();
+
+    const password =
+      document.getElementById('password').value;
+
+
+    if (!email || !password) {
+
+      document.getElementById('output').textContent =
+        'Enter email and password.';
+
+      return;
+    }
+
+
+    try {
+
+      const {
+        data,
+        error
+      } =
+        await supabaseClient.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
+
+
+      if (error) {
+
+        document.getElementById('output').textContent =
+          JSON.stringify({
+            step: 'LOGIN',
+            success: false,
+            error: error.message
+          }, null, 2);
+
+        return;
+      }
+
+
+      document.getElementById('output').textContent =
+        JSON.stringify({
+          step: 'LOGIN',
+          success: true,
+          user_id: data.user.id,
+          email: data.user.email
+        }, null, 2);
+
+    }
+
+    catch (err) {
+
+      document.getElementById('output').textContent =
+        JSON.stringify({
+          step: 'LOGIN',
+          success: false,
+          error: err.message
+        }, null, 2);
+
+    }
+
+  });
+
 </script>
 
 </body>
