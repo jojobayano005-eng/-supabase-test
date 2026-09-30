@@ -1,295 +1,123 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Apex Wealth — Supabase Test</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apex Wealth Test</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     body {
-      margin: 0;
-      padding: 24px;
       font-family: Arial, sans-serif;
       background: #111827;
-      color: #f9fafb;
-    }
-
-    .container {
-      max-width: 700px;
-      margin: 0 auto;
-    }
-
-    h1 {
-      margin-bottom: 6px;
-    }
-
-    .subtitle {
-      color: #9ca3af;
-      margin-bottom: 24px;
-    }
-
-    .card {
-      background: #1f2937;
-      border-radius: 12px;
-      padding: 18px;
-      margin-bottom: 16px;
-    }
-
-    button {
-      width: 100%;
-      padding: 13px;
-      margin: 7px 0;
-      border: 0;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 15px;
-      font-weight: 600;
-    }
-
-    button:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-    }
-
-    .primary {
-      background: #2563eb;
       color: white;
+      padding: 20px;
     }
 
-    .secondary {
-      background: #374151;
-      color: white;
+    .box {
+      max-width: 600px;
+      margin: auto;
     }
 
-    .warning {
-      background: #b45309;
-      color: white;
-    }
-
-    .danger {
-      background: #b91c1c;
-      color: white;
-    }
-
-    input {
+    input, button {
       width: 100%;
       box-sizing: border-box;
       padding: 12px;
-      margin: 7px 0;
+      margin: 6px 0;
       border-radius: 8px;
-      border: 1px solid #4b5563;
-      background: #111827;
+      font-size: 16px;
+    }
+
+    input {
+      background: #1f2937;
       color: white;
-      font-size: 15px;
+      border: 1px solid #4b5563;
+    }
+
+    button {
+      border: 0;
+      background: #2563eb;
+      color: white;
+      font-weight: bold;
     }
 
     pre {
+      background: #030712;
+      padding: 15px;
+      border-radius: 8px;
       white-space: pre-wrap;
       word-break: break-word;
-      background: #030712;
-      padding: 14px;
-      border-radius: 8px;
-      overflow-x: auto;
-      color: #d1d5db;
-    }
-
-    .status {
-      padding: 10px;
-      border-radius: 8px;
-      background: #374151;
-      margin-top: 10px;
-    }
-
-    .small {
-      font-size: 13px;
-      color: #9ca3af;
     }
   </style>
 </head>
 
 <body>
 
-<div class="container">
+<div class="box">
 
   <h1>APEX WEALTH</h1>
-  <div class="subtitle">
-    Supabase backend test console — paper trading only
-  </div>
+  <p>Supabase backend test</p>
 
-  <div class="card">
+  <input
+    id="email"
+    type="email"
+    value="praiseboutique74@gmail.com"
+    placeholder="Email"
+  >
 
-    <h2>Authentication</h2>
+  <input
+    id="password"
+    type="password"
+    placeholder="Password"
+  >
 
-    <input
-      id="email"
-      type="email"
-      placeholder="Email"
-      value="praiseboutique74@gmail.com"
-    />
+  <button id="loginButton">Sign In</button>
+  <button id="logoutButton">Sign Out</button>
 
-    <input
-      id="password"
-      type="password"
-      placeholder="Password"
-    />
+  <hr>
 
-    <button class="primary" onclick="signIn()">
-      Sign In
-    </button>
+  <button id="orderButton">
+    Test Create AAPL Order
+  </button>
 
-    <button class="secondary" onclick="signOut()">
-      Sign Out
-    </button>
+  <h3>Test Output</h3>
 
-    <div id="authStatus" class="status">
-      Not signed in.
-    </div>
-
-  </div>
-
-
-  <div class="card">
-
-    <h2>Order Test</h2>
-
-    <p class="small">
-      Tests the hardened create_order() RPC using a fresh idempotency key.
-      The current customer test account is pending and should be rejected.
-    </p>
-
-    <button
-      class="primary"
-      onclick="testCreateOrder()"
-    >
-      Test Create AAPL Order
-    </button>
-
-  </div>
-
-
-  <div class="card">
-
-    <h2>Funding Test</h2>
-
-    <p class="small">
-      Creates a $1,000 virtual funding request.
-    </p>
-
-    <button
-      class="warning"
-      onclick="createFunding()"
-    >
-      Create $1,000 Virtual Deposit
-    </button>
-
-    <button
-      class="warning"
-      onclick="approveFunding()"
-    >
-      Admin Approve $1,000 Virtual Deposit
-    </button>
-
-  </div>
-
-
-  <div class="card">
-
-    <h2>Execution Test</h2>
-
-    <p class="small">
-      Executes the original AAPL test order. Execution is administrator-only.
-    </p>
-
-    <button
-      class="danger"
-      onclick="executeOrder()"
-    >
-      Execute AAPL Paper Order
-    </button>
-
-  </div>
-
-
-  <div class="card">
-
-    <h2>Test Output</h2>
-
-    <pre id="output">Waiting for test...</pre>
-  </div>
+  <pre id="output">Page loaded. Waiting for action...</pre>
 
 </div>
 
-
 <script>
 
-  // ============================================================
-  // SUPABASE CONFIG
-  // ============================================================
+const SUPABASE_URL =
+  'https://ugplolnnklwiymryduii.supabase.co';
 
-  const SUPABASE_URL =
-    'https://ugplolnnklwiymryduii.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY =
+  'sb_publishable_2es_s2SFatFs0WrOC6ipnw_pqwyfIW1';
 
-  const SUPABASE_PUBLISHABLE_KEY =
-    'sb_publishable_2es_s2SFatFs0WrOC6ipnw_pqwyfIW1';
-
-  const { createClient } =
-    window.supabase;
-
-  const supabase =
-    createClient(
-      SUPABASE_URL,
-      SUPABASE_PUBLISHABLE_KEY
-    );
+const client =
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+  );
 
 
-  // ============================================================
-  // EXISTING TEST DATA
-  // ============================================================
+function output(data) {
 
-  const CUSTOMER_USER_ID =
-    'd0813e84-5ea6-44ee-b733-8f74813bad28';
+  document.getElementById('output').textContent =
+    JSON.stringify(data, null, 2);
 
-  const ADMIN_USER_ID =
-    '7e618f3d-90df-4a25-bab6-532a23adbdbd';
-
-  const TEST_FUNDING_REQUEST_ID =
-    '69802d8d-cd29-4a7a-b1c1-1e29e09fb316';
-
-  const TEST_ORDER_ID =
-    'b6281f82-1245-45bb-b8fc-f8ccd456b4d2';
+}
 
 
-  // ============================================================
-  // OUTPUT
-  // ============================================================
+document
+  .getElementById('loginButton')
+  .addEventListener('click', async function () {
 
-  function showOutput(data) {
-
-    document.getElementById('output').textContent =
-      JSON.stringify(data, null, 2);
-
-  }
-
-
-  // ============================================================
-  // AUTH STATUS
-  // ============================================================
-
-  function setAuthStatus(text) {
-
-    document.getElementById('authStatus').textContent =
-      text;
-
-  }
-
-
-  // ============================================================
-  // SIGN IN
-  // ============================================================
-
-  async function signIn() {
+    output({
+      step: 'LOGIN',
+      status: 'Attempting login...'
+    });
 
     const email =
       document.getElementById('email').value.trim();
@@ -299,433 +127,132 @@
 
     if (!email || !password) {
 
-      showOutput({
+      output({
         step: 'LOGIN',
         success: false,
-        error: 'Email and password are required.'
+        error: 'Enter email and password.'
       });
 
       return;
     }
 
+    const result =
+      await client.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
 
-    showOutput({
-      step: 'LOGIN',
-      status: 'Signing in...'
-    });
+    if (result.error) {
 
-
-    const {
-      data,
-      error
-    } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-
-
-    if (error) {
-
-      showOutput({
+      output({
         step: 'LOGIN',
         success: false,
-        error: error.message
+        error: result.error.message,
+        details: result.error.details || null
       });
 
       return;
     }
 
-
-    const user =
-      data.user;
-
-
-    setAuthStatus(
-      `Signed in: ${user.email}`
-    );
-
-
-    showOutput({
+    output({
       step: 'LOGIN',
       success: true,
-      user_id: user.id,
-      email: user.email
+      user_id: result.data.user.id,
+      email: result.data.user.email
     });
 
-  }
+  });
 
 
-  // ============================================================
-  // SIGN OUT
-  // ============================================================
+document
+  .getElementById('logoutButton')
+  .addEventListener('click', async function () {
 
-  async function signOut() {
+    const result =
+      await client.auth.signOut();
 
-    const {
-      error
-    } = await supabase.auth.signOut();
+    if (result.error) {
 
-
-    if (error) {
-
-      showOutput({
+      output({
         step: 'SIGN_OUT',
         success: false,
-        error: error.message
+        error: result.error.message
       });
 
       return;
     }
 
-
-    setAuthStatus(
-      'Not signed in.'
-    );
-
-
-    showOutput({
+    output({
       step: 'SIGN_OUT',
       success: true
     });
 
-  }
+  });
 
 
-  // ============================================================
-  // GET CURRENT USER
-  // ============================================================
+document
+  .getElementById('orderButton')
+  .addEventListener('click', async function () {
 
-  async function getCurrentUser() {
-
-    const {
-      data,
-      error
-    } = await supabase.auth.getUser();
-
-
-    if (error || !data.user) {
-
-      showOutput({
-        step: 'AUTH',
-        success: false,
-        error: 'Authentication required.'
-      });
-
-      return null;
-    }
-
-
-    return data.user;
-
-  }
-
-
-  // ============================================================
-  // TEST CREATE ORDER
-  // ============================================================
-
-  async function testCreateOrder() {
-
-    const user =
-      await getCurrentUser();
-
-
-    if (!user) {
-      return;
-    }
-
-
-    // Fresh idempotency key for this test.
-    const idempotencyKey =
-      'CREATE-ORDER-HARDENING-' +
-      Date.now();
-
-
-    showOutput({
+    output({
       step: 'CREATE_ORDER',
-      status: 'Testing hardened create_order()...',
-      user_id: user.id,
-      idempotency_key: idempotencyKey
+      status: 'Calling create_order()...'
     });
 
+    const sessionResult =
+      await client.auth.getSession();
 
-    const {
-      data,
-      error
-    } = await supabase.rpc(
-      'create_order',
-      {
-        p_symbol: 'AAPL',
-        p_side: 'buy',
-        p_quantity: 1,
-        p_limit_price: 225.10,
-        p_idempotency_key: idempotencyKey,
-        p_take_profit: null,
-        p_stop_loss: null
-      }
-    );
+    if (
+      sessionResult.error ||
+      !sessionResult.data.session
+    ) {
 
-
-    if (error) {
-
-      showOutput({
+      output({
         step: 'CREATE_ORDER',
         success: false,
-        error: error.message,
-        details: error.details || null,
-        hint: error.hint || null
+        error: 'No authenticated session.'
       });
 
       return;
     }
-
-
-    showOutput({
-      step: 'CREATE_ORDER',
-      success: true,
-      order_id: data,
-      message: 'Order was created successfully.'
-    });
-
-  }
-
-
-  // ============================================================
-  // CREATE FUNDING REQUEST
-  // ============================================================
-
-  async function createFunding() {
-
-    const user =
-      await getCurrentUser();
-
-
-    if (!user) {
-      return;
-    }
-
 
     const idempotencyKey =
-      'CUSTOMER-FUNDING-' +
-      Date.now();
+      'HARDENING-TEST-' + Date.now();
 
-
-    const {
-      data,
-      error
-    } = await supabase.rpc(
-      'create_funding_request',
-      {
-        p_type: 'deposit',
-        p_amount: 1000,
-        p_currency: 'USD',
-        p_idempotency_key: idempotencyKey,
-        p_note: 'Paper funding test'
-      }
-    );
-
-
-    if (error) {
-
-      showOutput({
-        step: 'FUNDING_REQUEST',
-        success: false,
-        error: error.message,
-        details: error.details || null,
-        hint: error.hint || null
-      });
-
-      return;
-    }
-
-
-    showOutput({
-      step: 'FUNDING_REQUEST',
-      success: true,
-      funding_request_id: data
-    });
-
-  }
-
-
-  // ============================================================
-  // ADMIN APPROVE EXISTING FUNDING REQUEST
-  // ============================================================
-
-  async function approveFunding() {
-
-    const user =
-      await getCurrentUser();
-
-
-    if (!user) {
-      return;
-    }
-
-
-    const {
-      data,
-      error
-    } = await supabase.rpc(
-      'admin_review_funding',
-      {
-        p_request_id:
-          TEST_FUNDING_REQUEST_ID,
-
-        p_status:
-          'approved'
-      }
-    );
-
-
-    if (error) {
-
-      showOutput({
-        step: 'FUNDING_APPROVAL',
-        success: false,
-        error: error.message,
-        details: error.details || null,
-        hint: error.hint || null
-      });
-
-      return;
-    }
-
-
-    showOutput({
-      step: 'FUNDING_APPROVAL',
-      success: true,
-      result: data,
-      funding_request_id:
-        TEST_FUNDING_REQUEST_ID
-    });
-
-  }
-
-
-  // ============================================================
-  // ADMIN EXECUTE EXISTING AAPL ORDER
-  // ============================================================
-
-  async function executeOrder() {
-
-    const user =
-      await getCurrentUser();
-
-
-    if (!user) {
-      return;
-    }
-
-
-    const {
-      data,
-      error
-    } = await supabase.rpc(
-      'execute_order',
-      {
-        p_order_id:
-          TEST_ORDER_ID,
-
-        p_execution_price:
-          225.10,
-
-        p_execution_quantity:
-          1,
-
-        p_idempotency_key:
-          'EXECUTION-AAPL-TEST-001'
-      }
-    );
-
-
-    if (error) {
-
-      showOutput({
-        step: 'EXECUTION',
-        success: false,
-        error: error.message,
-        details: error.details || null,
-        hint: error.hint || null
-      });
-
-      return;
-    }
-
-
-    showOutput({
-      step: 'EXECUTION',
-      success: true,
-      execution_id: data,
-      order_id: TEST_ORDER_ID,
-      symbol: 'AAPL',
-      side: 'buy',
-      quantity: 1,
-      execution_price: 225.10,
-      total: 225.10
-    });
-
-  }
-
-
-  // ============================================================
-  // RESTORE EXISTING SESSION
-  // ============================================================
-
-  async function restoreSession() {
-
-    const {
-      data
-    } = await supabase.auth.getSession();
-
-
-    if (data.session) {
-
-      setAuthStatus(
-        `Signed in: ${data.session.user.email}`
+    const result =
+      await client.rpc(
+        'create_order',
+        {
+          p_symbol: 'AAPL',
+          p_side: 'buy',
+          p_quantity: 1,
+          p_limit_price: 225.10,
+          p_idempotency_key: idempotencyKey,
+          p_take_profit: null,
+          p_stop_loss: null
+        }
       );
 
-    } else {
+    if (result.error) {
 
-      setAuthStatus(
-        'Not signed in.'
-      );
+      output({
+        step: 'CREATE_ORDER',
+        success: false,
+        error: result.error.message,
+        details: result.error.details || null,
+        hint: result.error.hint || null
+      });
 
+      return;
     }
 
-  }
+    output({
+      step: 'CREATE_ORDER',
+      success: true,
+      order_id: result.data
+    });
 
-
-  // ============================================================
-  // AUTH STATE LISTENER
-  // ============================================================
-
-  supabase.auth.onAuthStateChange(
-    (event, session) => {
-
-      if (session) {
-
-        setAuthStatus(
-          `Signed in: ${session.user.email}`
-        );
-
-      } else {
-
-        setAuthStatus(
-          'Not signed in.'
-        );
-
-      }
-
-    }
-  );
-
-
-  // ============================================================
-  // STARTUP
-  // ============================================================
-
-  restoreSession();
+  });
 
 </script>
 
