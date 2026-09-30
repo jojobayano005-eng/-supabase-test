@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Apex Wealth — Supabase Test</title>
+  <title>Apex Wealth — Order Test</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -33,7 +33,12 @@
   Sign In
 </button>
 
+<button id="order">
+  Test Create AAPL Order
+</button>
+
 <pre id="output">Waiting...</pre>
+
 
 <script>
 
@@ -50,12 +55,26 @@ const supabaseClient =
   );
 
 
+function show(data) {
+
+  document.getElementById('output').textContent =
+    JSON.stringify(data, null, 2);
+
+}
+
+
+// ============================================================
+// LOGIN
+// ============================================================
+
 document
   .getElementById('login')
   .addEventListener('click', async function () {
 
-    document.getElementById('output').textContent =
-      'Attempting login...';
+    show({
+      step: 'LOGIN',
+      status: 'Attempting login...'
+    });
 
 
     const email =
@@ -63,15 +82,6 @@ document
 
     const password =
       document.getElementById('password').value;
-
-
-    if (!email || !password) {
-
-      document.getElementById('output').textContent =
-        'Enter email and password.';
-
-      return;
-    }
 
 
     try {
@@ -88,35 +98,141 @@ document
 
       if (error) {
 
-        document.getElementById('output').textContent =
-          JSON.stringify({
-            step: 'LOGIN',
-            success: false,
-            error: error.message
-          }, null, 2);
+        show({
+          step: 'LOGIN',
+          success: false,
+          error: error.message
+        });
 
         return;
       }
 
 
-      document.getElementById('output').textContent =
-        JSON.stringify({
-          step: 'LOGIN',
-          success: true,
-          user_id: data.user.id,
-          email: data.user.email
-        }, null, 2);
+      show({
+        step: 'LOGIN',
+        success: true,
+        user_id: data.user.id,
+        email: data.user.email
+      });
 
     }
 
     catch (err) {
 
-      document.getElementById('output').textContent =
-        JSON.stringify({
-          step: 'LOGIN',
+      show({
+        step: 'LOGIN',
+        success: false,
+        error: err.message
+      });
+
+    }
+
+  });
+
+
+// ============================================================
+// CREATE ORDER TEST
+// ============================================================
+
+document
+  .getElementById('order')
+  .addEventListener('click', async function () {
+
+    show({
+      step: 'CREATE_ORDER',
+      status: 'Checking session...'
+    });
+
+
+    try {
+
+      const {
+        data,
+        error
+      } =
+        await supabaseClient.auth.getSession();
+
+
+      if (error) {
+
+        show({
+          step: 'CREATE_ORDER',
           success: false,
-          error: err.message
-        }, null, 2);
+          error: error.message
+        });
+
+        return;
+      }
+
+
+      if (!data.session) {
+
+        show({
+          step: 'CREATE_ORDER',
+          success: false,
+          error: 'No authenticated session.'
+        });
+
+        return;
+      }
+
+
+      const idempotencyKey =
+        'HARDENING-TEST-' + Date.now();
+
+
+      show({
+        step: 'CREATE_ORDER',
+        status: 'Calling create_order()...',
+        user_id: data.session.user.id,
+        idempotency_key: idempotencyKey
+      });
+
+
+      const result =
+        await supabaseClient.rpc(
+          'create_order',
+          {
+            p_symbol: 'AAPL',
+            p_side: 'buy',
+            p_quantity: 1,
+            p_limit_price: 225.10,
+            p_idempotency_key: idempotencyKey,
+            p_take_profit: null,
+            p_stop_loss: null
+          }
+        );
+
+
+      if (result.error) {
+
+        show({
+          step: 'CREATE_ORDER',
+          success: false,
+          error: result.error.message,
+          details: result.error.details || null,
+          hint: result.error.hint || null
+        });
+
+        return;
+      }
+
+
+      show({
+        step: 'CREATE_ORDER',
+        success: true,
+        order_id: result.data
+      });
+
+    }
+
+    catch (err) {
+
+      show({
+        step: 'CREATE_ORDER',
+        success: false,
+        error: err.message
+      });
 
     }
 
