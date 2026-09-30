@@ -1,259 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Apex Wealth Test</title>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #111827;
-      color: white;
-      padding: 20px;
-    }
-
-    .box {
-      max-width: 600px;
-      margin: auto;
-    }
-
-    input, button {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 12px;
-      margin: 6px 0;
-      border-radius: 8px;
-      font-size: 16px;
-    }
-
-    input {
-      background: #1f2937;
-      color: white;
-      border: 1px solid #4b5563;
-    }
-
-    button {
-      border: 0;
-      background: #2563eb;
-      color: white;
-      font-weight: bold;
-    }
-
-    pre {
-      background: #030712;
-      padding: 15px;
-      border-radius: 8px;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-  </style>
+  <title>Apex Test</title>
 </head>
 
 <body>
 
-<div class="box">
+<h1>APEX WEALTH TEST</h1>
 
-  <h1>APEX WEALTH</h1>
-  <p>Supabase backend test</p>
+<button onclick="testButton()">
+  TEST BUTTON
+</button>
 
-  <input
-    id="email"
-    type="email"
-    value="praiseboutique74@gmail.com"
-    placeholder="Email"
-  >
-
-  <input
-    id="password"
-    type="password"
-    placeholder="Password"
-  >
-
-  <button id="loginButton">Sign In</button>
-  <button id="logoutButton">Sign Out</button>
-
-  <hr>
-
-  <button id="orderButton">
-    Test Create AAPL Order
-  </button>
-
-  <h3>Test Output</h3>
-
-  <pre id="output">Page loaded. Waiting for action...</pre>
-
-</div>
+<pre id="output">Waiting...</pre>
 
 <script>
-
-const SUPABASE_URL =
-  'https://ugplolnnklwiymryduii.supabase.co';
-
-const SUPABASE_PUBLISHABLE_KEY =
-  'sb_publishable_2es_s2SFatFs0WrOC6ipnw_pqwyfIW1';
-
-const client =
-  window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_PUBLISHABLE_KEY
-  );
-
-
-function output(data) {
-
-  document.getElementById('output').textContent =
-    JSON.stringify(data, null, 2);
-
+function testButton() {
+  document.getElementById("output").textContent =
+    "JAVASCRIPT IS WORKING";
 }
-
-
-document
-  .getElementById('loginButton')
-  .addEventListener('click', async function () {
-
-    output({
-      step: 'LOGIN',
-      status: 'Attempting login...'
-    });
-
-    const email =
-      document.getElementById('email').value.trim();
-
-    const password =
-      document.getElementById('password').value;
-
-    if (!email || !password) {
-
-      output({
-        step: 'LOGIN',
-        success: false,
-        error: 'Enter email and password.'
-      });
-
-      return;
-    }
-
-    const result =
-      await client.auth.signInWithPassword({
-        email: email,
-        password: password
-      });
-
-    if (result.error) {
-
-      output({
-        step: 'LOGIN',
-        success: false,
-        error: result.error.message,
-        details: result.error.details || null
-      });
-
-      return;
-    }
-
-    output({
-      step: 'LOGIN',
-      success: true,
-      user_id: result.data.user.id,
-      email: result.data.user.email
-    });
-
-  });
-
-
-document
-  .getElementById('logoutButton')
-  .addEventListener('click', async function () {
-
-    const result =
-      await client.auth.signOut();
-
-    if (result.error) {
-
-      output({
-        step: 'SIGN_OUT',
-        success: false,
-        error: result.error.message
-      });
-
-      return;
-    }
-
-    output({
-      step: 'SIGN_OUT',
-      success: true
-    });
-
-  });
-
-
-document
-  .getElementById('orderButton')
-  .addEventListener('click', async function () {
-
-    output({
-      step: 'CREATE_ORDER',
-      status: 'Calling create_order()...'
-    });
-
-    const sessionResult =
-      await client.auth.getSession();
-
-    if (
-      sessionResult.error ||
-      !sessionResult.data.session
-    ) {
-
-      output({
-        step: 'CREATE_ORDER',
-        success: false,
-        error: 'No authenticated session.'
-      });
-
-      return;
-    }
-
-    const idempotencyKey =
-      'HARDENING-TEST-' + Date.now();
-
-    const result =
-      await client.rpc(
-        'create_order',
-        {
-          p_symbol: 'AAPL',
-          p_side: 'buy',
-          p_quantity: 1,
-          p_limit_price: 225.10,
-          p_idempotency_key: idempotencyKey,
-          p_take_profit: null,
-          p_stop_loss: null
-        }
-      );
-
-    if (result.error) {
-
-      output({
-        step: 'CREATE_ORDER',
-        success: false,
-        error: result.error.message,
-        details: result.error.details || null,
-        hint: result.error.hint || null
-      });
-
-      return;
-    }
-
-    output({
-      step: 'CREATE_ORDER',
-      success: true,
-      order_id: result.data
-    });
-
-  });
-
 </script>
 
 </body>
