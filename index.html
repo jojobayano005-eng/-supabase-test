@@ -3,52 +3,48 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Apex Wealth - Admin Funding Test</title>
+
+  <title>Apex Wealth Admin Test</title>
+
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     body {
       font-family: Arial, sans-serif;
-      max-width: 520px;
-      margin: 40px auto;
+      background: #111;
+      color: #fff;
       padding: 20px;
-      background: #f5f5f5;
+      line-height: 1.5;
     }
 
     .box {
-      background: white;
+      max-width: 600px;
+      margin: auto;
+      background: #1d1d1d;
       padding: 20px;
       border-radius: 12px;
     }
 
     input, button {
       width: 100%;
-      padding: 14px;
-      margin: 8px 0;
       box-sizing: border-box;
-      font-size: 16px;
+      padding: 12px;
+      margin-top: 10px;
       border-radius: 8px;
-    }
-
-    input {
-      border: 1px solid #ccc;
+      border: 1px solid #555;
+      font-size: 16px;
     }
 
     button {
-      border: 0;
-      background: #111;
-      color: white;
       cursor: pointer;
-    }
-
-    button:disabled {
-      opacity: .5;
-      cursor: not-allowed;
+      font-weight: bold;
     }
 
     pre {
       white-space: pre-wrap;
       word-break: break-word;
-      background: #eee;
+      background: #000;
       padding: 12px;
       border-radius: 8px;
       margin-top: 15px;
@@ -59,11 +55,10 @@
 <body>
 
 <div class="box">
-
-  <h2>Apex Wealth — Admin Funding Test</h2>
+  <h2>Apex Wealth Admin Test</h2>
 
   <p>
-    This is a temporary test page for the paper/virtual funding workflow.
+    Temporary test page for the paper/virtual funding workflow.
   </p>
 
   <input
@@ -79,194 +74,172 @@
     placeholder="Admin password"
   >
 
-  <button id="loginBtn" type="button">
+  <button onclick="loginAdmin()">
     Sign In as Admin
   </button>
 
-  <button id="approveBtn" type="button" disabled>
+  <button onclick="approveFunding()">
     Approve $1,000 Virtual Deposit
   </button>
 
   <pre id="output">Loading...</pre>
-
 </div>
 
 <script>
-const SUPABASE_URL =
-  "https://unpkg.com/@supabase/supabase-js@2"></script>
+  const SUPABASE_URL =
+    'https://ugplolnnklwiymryduii.supabase.co';
 
-const SUPABASE_ANON_KEY =
-  'sb_publishable_2es_s2SFatFs0WrOC6ipnw_pqwyfIW1';
+  const SUPABASE_PUBLISHABLE_KEY =
+    'sb_publishable_2es_s2SFatFs0WrOC6ipnw_pqwyfIW1';
 
-const FUNDING_REQUEST_ID =
-  '69802d8d-cd29-4a7a-b1c1-1e29e09fb316';
+  const FUNDING_REQUEST_ID =
+    '69802d8d-cd29-4a7a-b1c1-1e29e09fb316';
 
-let supabaseClient = null;
+  let supabaseClient = null;
 
-const output =
-  document.getElementById('output');
-
-const loginBtn =
-  document.getElementById('loginBtn');
-
-const approveBtn =
-  document.getElementById('approveBtn');
-
-function show(message) {
-  output.textContent =
-    typeof message === 'string'
-      ? message
-      : JSON.stringify(message, null, 2);
-}
-
-function startApp() {
-
-  if (!window.supabase) {
-    show({
-      step: 'STARTUP',
-      success: false,
-      error: 'Supabase library did not load.'
-    });
-    return;
+  function output(data) {
+    document.getElementById('output').textContent =
+      typeof data === 'string'
+        ? data
+        : JSON.stringify(data, null, 2);
   }
 
-  supabaseClient =
-    window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_ANON_KEY
-    );
+  function initializeSupabase() {
+    try {
+      if (!window.supabase) {
+        throw new Error('Supabase library did not load.');
+      }
 
-  show(
-    'Ready. Sign in with the admin test account.'
-  );
-}
+      if (!window.supabase.createClient) {
+        throw new Error('Supabase createClient is unavailable.');
+      }
 
-loginBtn.addEventListener(
-  'click',
-  async function () {
+      supabaseClient = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_PUBLISHABLE_KEY
+      );
 
-    show('Signing in as admin...');
+      output({
+        step: "INIT",
+        success: true,
+        message: "Supabase client is ready."
+      });
+
+    } catch (error) {
+      output({
+        step: "INIT",
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  async function loginAdmin() {
 
     if (!supabaseClient) {
-      show({
-        step: 'LOGIN',
+      output({
+        step: "LOGIN",
         success: false,
-        error: 'Supabase client is not ready.'
+        error: "Supabase client is not ready."
       });
       return;
     }
 
     const email =
-      document.getElementById('email')
-        .value.trim();
+      document.getElementById('email').value.trim();
 
     const password =
-      document.getElementById('password')
-        .value;
+      document.getElementById('password').value;
 
     if (!email || !password) {
-      show({
-        step: 'LOGIN',
+      output({
+        step: "LOGIN",
         success: false,
-        error: 'Email and password are required.'
+        error: "Enter the admin email and password."
       });
       return;
     }
 
-    try {
+    output("Signing in...");
 
-      const { data, error } =
-        await supabaseClient.auth
-          .signInWithPassword({
-            email: email,
-            password: password
-          });
-
-      if (error) {
-        show({
-          step: 'LOGIN',
-          success: false,
-          error: error.message,
-          details: error.details,
-          hint: error.hint
-        });
-        return;
-      }
-
-      approveBtn.disabled = false;
-
-      show({
-        step: 'LOGIN',
-        success: true,
-        user_id: data.user.id,
-        email: data.user.email,
-        message: 'Authenticated admin session established.'
+    const { data, error } =
+      await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
       });
 
-    } catch (err) {
-
-      show({
-        step: 'LOGIN',
+    if (error) {
+      output({
+        step: "LOGIN",
         success: false,
-        error: String(err)
+        error: error.message
       });
-
+      return;
     }
+
+    output({
+      step: "LOGIN",
+      success: true,
+      user_id: data.user?.id,
+      email: data.user?.email
+    });
   }
-);
 
-approveBtn.addEventListener(
-  'click',
-  async function () {
+  async function approveFunding() {
 
-    show(
-      'Approving $1,000 virtual funding request...'
-    );
-
-    try {
-
-      const { data, error } =
-        await supabaseClient.rpc(
-          'admin_review_funding',
-          {
-            p_request_id: FUNDING_REQUEST_ID,
-            p_status: 'approved'
-          }
-        );
-
-      if (error) {
-        show({
-          step: 'ADMIN_REVIEW_FUNDING',
-          success: false,
-          error: error.message,
-          details: error.details,
-          hint: error.hint
-        });
-        return;
-      }
-
-      show({
-        step: 'ADMIN_REVIEW_FUNDING',
-        success: true,
-        result: data,
-        funding_request_id: FUNDING_REQUEST_ID,
-        message:
-          'Funding request approval RPC completed successfully.'
-      });
-
-    } catch (err) {
-
-      show({
-        step: 'ADMIN_REVIEW_FUNDING',
+    if (!supabaseClient) {
+      output({
+        step: "FUNDING_APPROVAL",
         success: false,
-        error: String(err)
+        error: "Supabase client is not ready."
       });
-
+      return;
     }
-  }
-);
 
-startApp();
+    const {
+      data: sessionData
+    } = await supabaseClient.auth.getSession();
+
+    if (!sessionData.session) {
+      output({
+        step: "FUNDING_APPROVAL",
+        success: false,
+        error: "You must sign in as the admin first."
+      });
+      return;
+    }
+
+    output("Approving funding request...");
+
+    const { data, error } =
+      await supabaseClient.rpc(
+        'admin_review_funding',
+        {
+          p_request_id: FUNDING_REQUEST_ID,
+          p_status: 'approved'
+        }
+      );
+
+    if (error) {
+      output({
+        step: "FUNDING_APPROVAL",
+        success: false,
+        error: error.message,
+        details: error.details,
+        hint: error.hint
+      });
+      return;
+    }
+
+    output({
+      step: "FUNDING_APPROVAL",
+      success: true,
+      result: data,
+      funding_request_id: FUNDING_REQUEST_ID
+    });
+  }
+
+  window.addEventListener('load', initializeSupabase);
 </script>
 
 </body>
