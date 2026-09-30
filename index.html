@@ -1,52 +1,40 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Apex Wealth — Order Test</title>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <title>Apex Wealth - Idempotency Test</title>
 </head>
 
 <body>
+  <h1>APEX WEALTH</h1>
+  <h2>Order Idempotency Test</h2>
 
-<h1>APEX WEALTH</h1>
+  <button onclick="loginCustomer()">1. Sign In Customer</button>
+  <button onclick="testIdempotency()">2. Test Same Order Key</button>
 
-<input
-  id="email"
-  type="email"
-  value="praiseboutique74@gmail.com"
-  placeholder="Email"
->
+  <pre id="output">Waiting...</pre>
 
-<br><br>
-
-<input
-  id="password"
-  type="password"
-  placeholder="Password"
->
-
-<br><br>
-
-<button id="login">
-  Sign In
-</button>
-
-<button id="order">
-  Test Create AAPL Order
-</button>
-
-<pre id="output">Waiting...</pre>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-
 const SUPABASE_URL =
   'https://ugplolnnklwiymryduii.supabase.co';
 
 const SUPABASE_PUBLISHABLE_KEY =
   'sb_publishable_2es_s2SFatFs0WrOC6ipnw_pqwyfIW1';
+
+const CUSTOMER_EMAIL =
+  'praiseboutique74@gmail.com';
+
+const CUSTOMER_PASSWORD =
+  prompt('Enter the customer test account password:');
+
+const EXISTING_ORDER_ID =
+  'e21f0440-1000-4fee-8ba1-9792d6284fca';
+
+const SAME_IDEMPOTENCY_KEY =
+  'HARDENING-TEST-1790810299048';
 
 const supabaseClient =
   window.supabase.createClient(
@@ -54,190 +42,82 @@ const supabaseClient =
     SUPABASE_PUBLISHABLE_KEY
   );
 
-
 function show(data) {
-
   document.getElementById('output').textContent =
     JSON.stringify(data, null, 2);
-
 }
 
+async function loginCustomer() {
 
-// ============================================================
-// LOGIN
-// ============================================================
+  const { data, error } =
+    await supabaseClient.auth.signInWithPassword({
+      email: CUSTOMER_EMAIL,
+      password: CUSTOMER_PASSWORD
+    });
 
-document
-  .getElementById('login')
-  .addEventListener('click', async function () {
-
+  if (error) {
     show({
       step: 'LOGIN',
-      status: 'Attempting login...'
+      success: false,
+      error: error.message
     });
+    return;
+  }
 
-
-    const email =
-      document.getElementById('email').value.trim();
-
-    const password =
-      document.getElementById('password').value;
-
-
-    try {
-
-      const {
-        data,
-        error
-      } =
-        await supabaseClient.auth.signInWithPassword({
-          email: email,
-          password: password
-        });
-
-
-      if (error) {
-
-        show({
-          step: 'LOGIN',
-          success: false,
-          error: error.message
-        });
-
-        return;
-      }
-
-
-      show({
-        step: 'LOGIN',
-        success: true,
-        user_id: data.user.id,
-        email: data.user.email
-      });
-
-    }
-
-    catch (err) {
-
-      show({
-        step: 'LOGIN',
-        success: false,
-        error: err.message
-      });
-
-    }
-
+  show({
+    step: 'LOGIN',
+    success: true,
+    user_id: data.user.id,
+    email: data.user.email
   });
+}
 
+async function testIdempotency() {
 
-// ============================================================
-// CREATE ORDER TEST
-// ============================================================
+  const {
+    data: { user }
+  } = await supabaseClient.auth.getUser();
 
-document
-  .getElementById('order')
-  .addEventListener('click', async function () {
-
+  if (!user) {
     show({
-      step: 'CREATE_ORDER',
-      status: 'Checking session...'
+      step: 'CREATE_ORDER_IDEMPOTENCY',
+      success: false,
+      error: 'Please sign in first.'
+    });
+    return;
+  }
+
+  const { data, error } =
+    await supabaseClient.rpc('create_order', {
+      p_symbol: 'AAPL',
+      p_side: 'buy',
+      p_quantity: 1,
+      p_limit_price: 225.10,
+      p_idempotency_key: SAME_IDEMPOTENCY_KEY,
+      p_take_profit: null,
+      p_stop_loss: null
     });
 
+  if (error) {
+    show({
+      step: 'CREATE_ORDER_IDEMPOTENCY',
+      success: false,
+      error: error.message,
+      details: error.details,
+      hint: error.hint
+    });
+    return;
+  }
 
-    try {
-
-      const {
-        data,
-        error
-      } =
-        await supabaseClient.auth.getSession();
-
-
-      if (error) {
-
-        show({
-          step: 'CREATE_ORDER',
-          success: false,
-          error: error.message
-        });
-
-        return;
-      }
-
-
-      if (!data.session) {
-
-        show({
-          step: 'CREATE_ORDER',
-          success: false,
-          error: 'No authenticated session.'
-        });
-
-        return;
-      }
-
-
-      const idempotencyKey =
-        'HARDENING-TEST-' + Date.now();
-
-
-      show({
-        step: 'CREATE_ORDER',
-        status: 'Calling create_order()...',
-        user_id: data.session.user.id,
-        idempotency_key: idempotencyKey
-      });
-
-
-      const result =
-        await supabaseClient.rpc(
-          'create_order',
-          {
-            p_symbol: 'AAPL',
-            p_side: 'buy',
-            p_quantity: 1,
-            p_limit_price: 225.10,
-            p_idempotency_key: idempotencyKey,
-            p_take_profit: null,
-            p_stop_loss: null
-          }
-        );
-
-
-      if (result.error) {
-
-        show({
-          step: 'CREATE_ORDER',
-          success: false,
-          error: result.error.message,
-          details: result.error.details || null,
-          hint: result.error.hint || null
-        });
-
-        return;
-      }
-
-
-      show({
-        step: 'CREATE_ORDER',
-        success: true,
-        order_id: result.data
-      });
-
-    }
-
-    catch (err) {
-
-      show({
-        step: 'CREATE_ORDER',
-        success: false,
-        error: err.message
-      });
-
-    }
-
+  show({
+    step: 'CREATE_ORDER_IDEMPOTENCY',
+    success: true,
+    returned_order_id: data,
+    expected_existing_order_id: EXISTING_ORDER_ID,
+    same_order_returned:
+      data === EXISTING_ORDER_ID
   });
-
+}
 </script>
 
 </body>
