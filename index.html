@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Supabase Funding Test</title>
 
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -86,10 +88,11 @@
 
 <script>
 const SUPABASE_URL =
-"https://unpkg.com/@supabase/supabase-js@2"></script>
+  'https://ugplolnnklwiymryduii.supabase.co';
 
 const SUPABASE_ANON_KEY =
-'sb_publishable_2es_s2SFatFs0WrOC6ipn_w_pqwyfIW1';
+  'sb_publishable_2es_s2SFatFs0WrOC6ipnw_pqwyfIW1';
+
 let supabaseClient = null;
 
 const output = document.getElementById('output');
@@ -152,14 +155,11 @@ loginBtn.addEventListener('click', async function () {
 
   try {
 
-    const result =
+    const { data, error } =
       await supabaseClient.auth.signInWithPassword({
         email: email,
         password: password
       });
-
-    const data = result.data;
-    const error = result.error;
 
     if (error) {
       show({
@@ -199,7 +199,7 @@ fundBtn.addEventListener('click', async function () {
 
   try {
 
-    const result =
+    const { data, error } =
       await supabaseClient.rpc(
         'create_funding_request',
         {
@@ -210,9 +210,6 @@ fundBtn.addEventListener('click', async function () {
           p_note: 'End-to-end paper funding test'
         }
       );
-
-    const data = result.data;
-    const error = result.error;
 
     if (error) {
       show({
@@ -243,11 +240,7 @@ fundBtn.addEventListener('click', async function () {
 
 });
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', startApp);
-} else {
-  startApp();
-}
+startApp();
 </script>
 
 </body>
