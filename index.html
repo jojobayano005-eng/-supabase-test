@@ -6,7 +6,9 @@
 
   <title>Apex Wealth Admin Execution Test</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+  </script>
 
   <style>
     body {
@@ -46,10 +48,6 @@
 
 <h2>Apex Wealth — Admin Execution Test</h2>
 
-<p>
-  Temporary test page for the paper-trading execution workflow.
-</p>
-
 <input
   id="email"
   type="email"
@@ -63,132 +61,249 @@
   placeholder="Admin password"
 >
 
-<button onclick="login()">
+<button id="loginBtn">
   Sign In as Admin
 </button>
 
-<button onclick="executeOrder()">
+<button id="executeBtn" disabled>
   Execute AAPL Paper Order
 </button>
 
-<pre id="output">Loading...</pre>
+<pre id="output">Starting...</pre>
 
 <script>
 
 const SUPABASE_URL =
   'https://ugplolnnklwiymryduii.supabase.co';
 
-const SUPABASE_KEY =
+const SUPABASE_PUBLISHABLE_KEY =
   'sb_publishable_2es_s2SFatFs0WrOC6ipnw_pqwyfIW1';
+
+let supabaseClient = null;
+
+const output =
+  document.getElementById('output');
+
+const loginBtn =
+  document.getElementById('loginBtn');
+
+const executeBtn =
+  document.getElementById('executeBtn');
 
 const ORDER_ID =
   'b6281f82-1245-45bb-b8fc-f8ccd456b4d2';
 
-let client = null;
 
-function show(data) {
-  document.getElementById('output').textContent =
-    typeof data === 'string'
-      ? data
-      : JSON.stringify(data, null, 2);
+function show(message) {
+
+  output.textContent =
+    typeof message === 'string'
+      ? message
+      : JSON.stringify(message, null, 2);
+
 }
 
-window.addEventListener('load', () => {
+
+function startApp() {
 
   if (!window.supabase) {
+
     show({
-      step: 'INIT',
+      step: 'STARTUP',
       success: false,
-      error: 'Supabase library did not load.'
+      error: 'Supabase JavaScript library did not load.'
     });
+
     return;
   }
 
-  client = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-  );
+  try {
 
-  show({
-    step: 'INIT',
-    success: true,
-    message: 'Supabase client ready.'
-  });
-});
+    supabaseClient =
+      window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_PUBLISHABLE_KEY
+      );
 
-
-async function login() {
-
-  const email =
-    document.getElementById('email').value.trim();
-
-  const password =
-    document.getElementById('password').value;
-
-  show('Signing in as admin...');
-
-  const { data, error } =
-    await client.auth.signInWithPassword({
-      email,
-      password
-    });
-
-  if (error) {
     show({
-      step: 'LOGIN',
-      success: false,
-      error: error.message
+      step: 'STARTUP',
+      success: true,
+      message: 'Supabase client is ready.'
     });
-    return;
+
+  } catch (error) {
+
+    show({
+      step: 'STARTUP',
+      success: false,
+      error: String(error)
+    });
+
   }
 
-  show({
-    step: 'LOGIN',
-    success: true,
-    user_id: data.user.id,
-    email: data.user.email,
-    message: 'Admin authentication successful.'
-  });
 }
 
 
-async function executeOrder() {
+loginBtn.addEventListener(
+  'click',
+  async function () {
 
-  show('Executing AAPL paper order...');
+    if (!supabaseClient) {
 
-  const { data, error } =
-    await client.rpc(
-      'execute_order',
-      {
-        p_order_id: ORDER_ID,
-        p_execution_price: 225.10,
-        p_execution_quantity: 1,
-        p_idempotency_key: 'TEST-AAPL-EXECUTION-001'
+      show({
+        step: 'LOGIN',
+        success: false,
+        error: 'Supabase client is not ready.'
+      });
+
+      return;
+    }
+
+    const email =
+      document.getElementById('email')
+        .value
+        .trim();
+
+    const password =
+      document.getElementById('password')
+        .value;
+
+    if (!email || !password) {
+
+      show({
+        step: 'LOGIN',
+        success: false,
+        error: 'Email and password are required.'
+      });
+
+      return;
+    }
+
+    show('Signing in as admin...');
+
+    try {
+
+      const result =
+        await supabaseClient.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
+
+      const data = result.data;
+      const error = result.error;
+
+      if (error) {
+
+        show({
+          step: 'LOGIN',
+          success: false,
+          error: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+
+        return;
       }
-    );
 
-  if (error) {
-    show({
-      step: 'EXECUTION',
-      success: false,
-      error: error.message,
-      details: error.details,
-      hint: error.hint
-    });
-    return;
+      executeBtn.disabled = false;
+
+      show({
+        step: 'LOGIN',
+        success: true,
+        user_id: data.user.id,
+        email: data.user.email,
+        message: 'Admin authentication successful.'
+      });
+
+    } catch (error) {
+
+      show({
+        step: 'LOGIN',
+        success: false,
+        error: String(error)
+      });
+
+    }
+
   }
+);
 
-  show({
-    step: 'EXECUTION',
-    success: true,
-    execution_id: data,
-    order_id: ORDER_ID,
-    symbol: 'AAPL',
-    side: 'buy',
-    quantity: 1,
-    execution_price: 225.10,
-    total: 225.10
-  });
+
+executeBtn.addEventListener(
+  'click',
+  async function () {
+
+    show('Executing AAPL paper order...');
+
+    try {
+
+      const result =
+        await supabaseClient.rpc(
+          'execute_order',
+          {
+            p_order_id: ORDER_ID,
+            p_execution_price: 225.10,
+            p_execution_quantity: 1,
+            p_idempotency_key:
+              'TEST-AAPL-EXECUTION-001'
+          }
+        );
+
+      const data = result.data;
+      const error = result.error;
+
+      if (error) {
+
+        show({
+          step: 'EXECUTION',
+          success: false,
+          error: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+
+        return;
+      }
+
+      show({
+        step: 'EXECUTION',
+        success: true,
+        execution_id: data,
+        order_id: ORDER_ID,
+        symbol: 'AAPL',
+        side: 'buy',
+        quantity: 1,
+        execution_price: 225.10,
+        total: 225.10
+      });
+
+    } catch (error) {
+
+      show({
+        step: 'EXECUTION',
+        success: false,
+        error: String(error)
+      });
+
+    }
+
+  }
+);
+
+
+if (
+  document.readyState === 'loading'
+) {
+
+  document.addEventListener(
+    'DOMContentLoaded',
+    startApp
+  );
+
+} else {
+
+  startApp();
+
 }
 
 </script>
