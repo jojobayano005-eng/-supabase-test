@@ -4,35 +4,26 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>Apex Wealth Admin Test</title>
+  <title>Apex Wealth Paper Trading Test</title>
 
-  <!-- Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #111;
-      color: #fff;
-      padding: 20px;
-      line-height: 1.5;
-    }
-
-    .box {
       max-width: 600px;
-      margin: auto;
-      background: #1d1d1d;
+      margin: 30px auto;
       padding: 20px;
-      border-radius: 12px;
+      background: #111;
+      color: white;
     }
 
     input, button {
       width: 100%;
       box-sizing: border-box;
-      padding: 12px;
-      margin-top: 10px;
+      padding: 13px;
+      margin: 7px 0;
       border-radius: 8px;
-      border: 1px solid #555;
       font-size: 16px;
     }
 
@@ -42,204 +33,153 @@
     }
 
     pre {
+      background: #000;
+      padding: 15px;
+      border-radius: 8px;
       white-space: pre-wrap;
       word-break: break-word;
-      background: #000;
-      padding: 12px;
-      border-radius: 8px;
-      margin-top: 15px;
     }
   </style>
 </head>
 
 <body>
 
-<div class="box">
-  <h2>Apex Wealth Admin Test</h2>
+<h2>Apex Wealth — Paper Trading Test</h2>
 
-  <p>
-    Temporary test page for the paper/virtual funding workflow.
-  </p>
+<input
+  id="email"
+  type="email"
+  value="praiseboutique74@gmail.com"
+  placeholder="Customer email"
+>
 
-  <input
-    id="email"
-    type="email"
-    value="mendozavalerie275@gmail.com"
-    placeholder="Admin email"
-  >
+<input
+  id="password"
+  type="password"
+  placeholder="Customer password"
+>
 
-  <input
-    id="password"
-    type="password"
-    placeholder="Admin password"
-  >
+<button onclick="login()">
+  Sign In
+</button>
 
-  <button onclick="loginAdmin()">
-    Sign In as Admin
-  </button>
+<button onclick="createAAPLOrder()">
+  Create 1 AAPL Paper Buy @ $225.10
+</button>
 
-  <button onclick="approveFunding()">
-    Approve $1,000 Virtual Deposit
-  </button>
-
-  <pre id="output">Loading...</pre>
-</div>
+<pre id="output">Loading...</pre>
 
 <script>
-  const SUPABASE_URL =
-    'https://ugplolnnklwiymryduii.supabase.co';
 
-  const SUPABASE_PUBLISHABLE_KEY =
-    'sb_publishable_2es_s2SFatFs0WrOC6ipnw_pqwyfIW1';
+const SUPABASE_URL =
+  'https://ugplolnnklwiymryduii.supabase.co';
 
-  const FUNDING_REQUEST_ID =
-    '69802d8d-cd29-4a7a-b1c1-1e29e09fb316';
+const SUPABASE_KEY =
+  'sb_publishable_2es_s2SFatFs0WrOC6ipnw_pqwyfIW1';
 
-  let supabaseClient = null;
+let client = null;
 
-  function output(data) {
-    document.getElementById('output').textContent =
-      typeof data === 'string'
-        ? data
-        : JSON.stringify(data, null, 2);
-  }
+function show(data) {
+  document.getElementById('output').textContent =
+    typeof data === 'string'
+      ? data
+      : JSON.stringify(data, null, 2);
+}
 
-  function initializeSupabase() {
-    try {
-      if (!window.supabase) {
-        throw new Error('Supabase library did not load.');
-      }
+window.addEventListener('load', () => {
 
-      if (!window.supabase.createClient) {
-        throw new Error('Supabase createClient is unavailable.');
-      }
-
-      supabaseClient = window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_PUBLISHABLE_KEY
-      );
-
-      output({
-        step: "INIT",
-        success: true,
-        message: "Supabase client is ready."
-      });
-
-    } catch (error) {
-      output({
-        step: "INIT",
-        success: false,
-        error: error.message
-      });
-    }
-  }
-
-  async function loginAdmin() {
-
-    if (!supabaseClient) {
-      output({
-        step: "LOGIN",
-        success: false,
-        error: "Supabase client is not ready."
-      });
-      return;
-    }
-
-    const email =
-      document.getElementById('email').value.trim();
-
-    const password =
-      document.getElementById('password').value;
-
-    if (!email || !password) {
-      output({
-        step: "LOGIN",
-        success: false,
-        error: "Enter the admin email and password."
-      });
-      return;
-    }
-
-    output("Signing in...");
-
-    const { data, error } =
-      await supabaseClient.auth.signInWithPassword({
-        email: email,
-        password: password
-      });
-
-    if (error) {
-      output({
-        step: "LOGIN",
-        success: false,
-        error: error.message
-      });
-      return;
-    }
-
-    output({
-      step: "LOGIN",
-      success: true,
-      user_id: data.user?.id,
-      email: data.user?.email
+  if (!window.supabase) {
+    show({
+      step: 'INIT',
+      success: false,
+      error: 'Supabase library did not load.'
     });
+    return;
   }
 
-  async function approveFunding() {
+  client = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
 
-    if (!supabaseClient) {
-      output({
-        step: "FUNDING_APPROVAL",
-        success: false,
-        error: "Supabase client is not ready."
-      });
-      return;
-    }
+  show({
+    step: 'INIT',
+    success: true,
+    message: 'Supabase client ready.'
+  });
+});
 
-    const {
-      data: sessionData
-    } = await supabaseClient.auth.getSession();
 
-    if (!sessionData.session) {
-      output({
-        step: "FUNDING_APPROVAL",
-        success: false,
-        error: "You must sign in as the admin first."
-      });
-      return;
-    }
+async function login() {
 
-    output("Approving funding request...");
+  const email =
+    document.getElementById('email').value.trim();
 
-    const { data, error } =
-      await supabaseClient.rpc(
-        'admin_review_funding',
-        {
-          p_request_id: FUNDING_REQUEST_ID,
-          p_status: 'approved'
-        }
-      );
+  const password =
+    document.getElementById('password').value;
 
-    if (error) {
-      output({
-        step: "FUNDING_APPROVAL",
-        success: false,
-        error: error.message,
-        details: error.details,
-        hint: error.hint
-      });
-      return;
-    }
+  show('Signing in...');
 
-    output({
-      step: "FUNDING_APPROVAL",
-      success: true,
-      result: data,
-      funding_request_id: FUNDING_REQUEST_ID
+  const { data, error } =
+    await client.auth.signInWithPassword({
+      email,
+      password
     });
+
+  if (error) {
+    show({
+      step: 'LOGIN',
+      success: false,
+      error: error.message
+    });
+    return;
   }
 
-  window.addEventListener('load', initializeSupabase);
+  show({
+    step: 'LOGIN',
+    success: true,
+    user_id: data.user.id,
+    email: data.user.email
+  });
+}
+
+
+async function createAAPLOrder() {
+
+  show('Creating AAPL paper order...');
+
+  const { data, error } =
+    await client.rpc(
+      'create_order',
+      {
+        p_symbol: 'AAPL',
+        p_side: 'buy',
+        p_quantity: 1,
+        p_limit_price: 225.10,
+        p_idempotency_key: 'TEST-AAPL-BUY-001',
+        p_take_profit: null,
+        p_stop_loss: null
+      }
+    );
+
+  if (error) {
+    show({
+      step: 'CREATE_ORDER',
+      success: false,
+      error: error.message,
+      details: error.details,
+      hint: error.hint
+    });
+    return;
+  }
+
+  show({
+    step: 'CREATE_ORDER',
+    success: true,
+    order_id: data
+  });
+}
+
 </script>
 
 </body>
