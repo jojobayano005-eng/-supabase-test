@@ -3,38 +3,53 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Apex Wealth - Idempotency Test</title>
+  <title>Apex Wealth - Execution Security Test</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
-  <h1>APEX WEALTH</h1>
-  <h2>Order Idempotency Test</h2>
 
-  <button onclick="loginCustomer()">1. Sign In Customer</button>
-  <button onclick="testIdempotency()">2. Test Same Order Key</button>
+<h2>APEX WEALTH</h2>
+<h3>Execution Security Test</h3>
 
-  <pre id="output">Waiting...</pre>
+<input
+  id="email"
+  type="email"
+  value="praiseboutique74@gmail.com"
+  placeholder="Email"
+>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<br><br>
+
+<input
+  id="password"
+  type="password"
+  placeholder="Password"
+>
+
+<br><br>
+
+<button id="loginButton">
+  Sign In
+</button>
+
+<button id="executeButton" disabled>
+  Execute Existing AAPL Order
+</button>
+
+<pre id="output">Waiting...</pre>
 
 <script>
+
 const SUPABASE_URL =
   'https://ugplolnnklwiymryduii.supabase.co';
 
 const SUPABASE_PUBLISHABLE_KEY =
   'sb_publishable_2es_s2SFatFs0WrOC6ipnw_pqwyfIW1';
 
-const CUSTOMER_EMAIL =
-  'praiseboutique74@gmail.com';
-
-const CUSTOMER_PASSWORD =
-  prompt('Enter the customer test account password:');
-
-const EXISTING_ORDER_ID =
+const ORDER_ID =
   'e21f0440-1000-4fee-8ba1-9792d6284fca';
-
-const SAME_IDEMPOTENCY_KEY =
-  'HARDENING-TEST-1790810299048';
 
 const supabaseClient =
   window.supabase.createClient(
@@ -42,82 +57,177 @@ const supabaseClient =
     SUPABASE_PUBLISHABLE_KEY
   );
 
+const output =
+  document.getElementById('output');
+
+const executeButton =
+  document.getElementById('executeButton');
+
+
 function show(data) {
-  document.getElementById('output').textContent =
+  output.textContent =
     JSON.stringify(data, null, 2);
 }
 
-async function loginCustomer() {
 
-  const { data, error } =
-    await supabaseClient.auth.signInWithPassword({
-      email: CUSTOMER_EMAIL,
-      password: CUSTOMER_PASSWORD
-    });
+// ================================
+// SIGN IN
+// ================================
 
-  if (error) {
+document
+  .getElementById('loginButton')
+  .addEventListener('click', async function () {
+
     show({
       step: 'LOGIN',
-      success: false,
-      error: error.message
+      status: 'Signing in...'
     });
-    return;
-  }
 
-  show({
-    step: 'LOGIN',
-    success: true,
-    user_id: data.user.id,
-    email: data.user.email
+    const email =
+      document.getElementById('email')
+        .value
+        .trim();
+
+    const password =
+      document.getElementById('password')
+        .value;
+
+    if (!email || !password) {
+
+      show({
+        step: 'LOGIN',
+        success: false,
+        error: 'Email and password are required.'
+      });
+
+      return;
+    }
+
+    try {
+
+      const result =
+        await supabaseClient.auth
+          .signInWithPassword({
+            email,
+            password
+          });
+
+      if (result.error) {
+
+        show({
+          step: 'LOGIN',
+          success: false,
+          error: result.error.message
+        });
+
+        return;
+      }
+
+      executeButton.disabled = false;
+
+      show({
+        step: 'LOGIN',
+        success: true,
+        user_id: result.data.user.id,
+        email: result.data.user.email,
+        message:
+          'Customer authentication successful. Execute button enabled.'
+      });
+
+    } catch (err) {
+
+      show({
+        step: 'LOGIN',
+        success: false,
+        error: err.message
+      });
+
+    }
+
   });
-}
 
-async function testIdempotency() {
 
-  const {
-    data: { user }
-  } = await supabaseClient.auth.getUser();
+// ================================
+// EXECUTE EXISTING ORDER
+// ================================
 
-  if (!user) {
+executeButton
+  .addEventListener('click', async function () {
+
     show({
-      step: 'CREATE_ORDER_IDEMPOTENCY',
-      success: false,
-      error: 'Please sign in first.'
-    });
-    return;
-  }
-
-  const { data, error } =
-    await supabaseClient.rpc('create_order', {
-      p_symbol: 'AAPL',
-      p_side: 'buy',
-      p_quantity: 1,
-      p_limit_price: 225.10,
-      p_idempotency_key: SAME_IDEMPOTENCY_KEY,
-      p_take_profit: null,
-      p_stop_loss: null
+      step: 'EXECUTION',
+      status: 'Attempting execution...'
     });
 
-  if (error) {
-    show({
-      step: 'CREATE_ORDER_IDEMPOTENCY',
-      success: false,
-      error: error.message,
-      details: error.details,
-      hint: error.hint
-    });
-    return;
-  }
+    try {
 
-  show({
-    step: 'CREATE_ORDER_IDEMPOTENCY',
-    success: true,
-    returned_order_id: data,
-    expected_existing_order_id: EXISTING_ORDER_ID,
-    same_order_returned:
-      data === EXISTING_ORDER_ID
+      const sessionResult =
+        await supabaseClient.auth.getSession();
+
+      if (
+        sessionResult.error ||
+        !sessionResult.data.session
+      ) {
+
+        show({
+          step: 'EXECUTION',
+          success: false,
+          error: 'No authenticated session.'
+        });
+
+        return;
+      }
+
+
+      const result =
+        await supabaseClient.rpc(
+          'execute_order',
+          {
+            p_order_id: ORDER_ID,
+            p_execution_price: 225.10,
+            p_execution_quantity: 1,
+            p_idempotency_key:
+              'SECURITY-TEST-CUSTOMER-001'
+          }
+        );
+
+
+      if (result.error) {
+
+        show({
+          step: 'EXECUTION',
+          success: false,
+          error: result.error.message,
+          details:
+            result.error.details || null,
+          hint:
+            result.error.hint || null
+        });
+
+        return;
+      }
+
+
+      show({
+        step: 'EXECUTION',
+        success: true,
+        execution_id: result.data,
+        message:
+          'Customer was able to execute the order.'
+      });
+
+    } catch (err) {
+
+      show({
+        step: 'EXECUTION',
+        success: false,
+        error: err.message
+      });
+
+    }
+
   });
-}
+
 </script>
 
 </body>
