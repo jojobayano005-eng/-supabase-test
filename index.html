@@ -3,21 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Apex Wealth | Paper Trading</title>
+  <title>Apex Wealth | Digital Investment Management</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: Arial, sans-serif;
       background: #0b1020;
       color: #eef2ff;
     }
+
     .container {
       width: min(1100px, 94%);
       margin: auto;
       padding: 25px 0 50px;
     }
+
     header {
       display: flex;
       justify-content: space-between;
@@ -27,11 +30,13 @@
       border-bottom: 1px solid #26304a;
       margin-bottom: 25px;
     }
+
     .brand {
       font-size: 22px;
       font-weight: 800;
       letter-spacing: 1px;
     }
+
     .paper {
       display: inline-block;
       margin-top: 5px;
@@ -39,6 +44,7 @@
       color: #aab6d3;
       letter-spacing: 1px;
     }
+
     button {
       border: 0;
       border-radius: 9px;
@@ -48,14 +54,26 @@
       background: #355cff;
       color: white;
     }
-    button:hover { opacity: .9; }
+
+    button:hover {
+      opacity: .9;
+    }
+
     button:disabled {
       opacity: .45;
       cursor: not-allowed;
     }
-    .danger { background: #c9364f; }
-    .secondary { background: #29334d; }
-    input, select {
+
+    .danger {
+      background: #c9364f;
+    }
+
+    .secondary {
+      background: #29334d;
+    }
+
+    input,
+    select {
       width: 100%;
       padding: 12px;
       border-radius: 8px;
@@ -64,12 +82,14 @@
       color: white;
       outline: none;
     }
+
     label {
       display: block;
       margin: 12px 0 6px;
       color: #aab6d3;
       font-size: 13px;
     }
+
     .card {
       background: #11182b;
       border: 1px solid #26304a;
@@ -77,33 +97,42 @@
       padding: 20px;
       margin-bottom: 18px;
     }
+
     .grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 15px;
     }
+
     .stat {
       background: #0d1425;
       border: 1px solid #26304a;
       border-radius: 12px;
       padding: 18px;
     }
+
     .stat-label {
       color: #8996b7;
       font-size: 12px;
       margin-bottom: 8px;
     }
+
     .stat-value {
       font-size: 24px;
       font-weight: 800;
     }
+
     .row {
       display: flex;
       gap: 10px;
       align-items: center;
       flex-wrap: wrap;
     }
-    .hidden { display: none !important; }
+
+    .hidden {
+      display: none !important;
+    }
+
     .status {
       padding: 10px 12px;
       border-radius: 8px;
@@ -111,36 +140,58 @@
       color: #b9c5e3;
       margin-bottom: 15px;
     }
-    .success { color: #70e0a0; }
-    .error { color: #ff8295; }
-    .warning { color: #ffd36e; }
+
+    .success {
+      color: #70e0a0;
+    }
+
+    .error {
+      color: #ff8295;
+    }
+
+    .warning {
+      color: #ffd36e;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 12px;
     }
-    th, td {
+
+    th,
+    td {
       text-align: left;
       padding: 11px 8px;
       border-bottom: 1px solid #26304a;
       font-size: 13px;
     }
-    th { color: #8996b7; }
+
+    th {
+      color: #8996b7;
+    }
+
     .login-wrap {
       max-width: 430px;
       margin: 8vh auto;
     }
+
     .logo-large {
       font-size: 30px;
       font-weight: 900;
       margin-bottom: 4px;
     }
+
     .muted {
       color: #8996b7;
       font-size: 13px;
       line-height: 1.5;
     }
-    .admin-box { border-color: #5d4b1e; }
+
+    .admin-box {
+      border-color: #5d4b1e;
+    }
+
     .badge {
       display: inline-block;
       padding: 5px 9px;
@@ -149,14 +200,17 @@
       font-size: 12px;
       margin-right: 5px;
     }
+
     .admin-badge {
       background: #5a4715;
       color: #ffd76a;
     }
+
     .user-badge {
       background: #193d31;
       color: #7ce0ae;
     }
+
     .output {
       white-space: pre-wrap;
       word-break: break-word;
@@ -169,9 +223,16 @@
       max-height: 250px;
       overflow: auto;
     }
+
     @media (max-width: 760px) {
-      .grid { grid-template-columns: 1fr; }
-      header { align-items: flex-start; }
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      header {
+        align-items: flex-start;
+      }
+
       table {
         display: block;
         overflow-x: auto;
@@ -180,256 +241,618 @@
     }
   </style>
 </head>
+
 <body>
+
 <div class="container">
+
   <!-- LOGIN -->
   <section id="loginScreen" class="login-wrap">
     <div class="card">
-  <div class="logo-large">APEX WEALTH</div>
-  <div class="paper">PAPER / VIRTUAL TRADING PLATFORM</div>
-  <p class="muted">
-    Sign in to access your virtual portfolio and paper trading workspace.
-  </p>
-  <label>Email</label>
-  <input id="email" type="email" autocomplete="username">
-  <label>Password</label>
-  <input id="password" type="password" autocomplete="current-password">
-  <br>
-  <button id="loginBtn" style="width:100%;">
-    Sign In
-  </button>
-  <div id="loginStatus" class="status" style="margin-top:15px;">
-    Ready.
-  </div>
-</div>
+
+      <div class="logo-large">APEX WEALTH</div>
+
+      <div class="paper">
+        DIGITAL INVESTMENT MANAGEMENT
+      </div>
+
+      <p class="muted">
+        Sign in to access your investment dashboard,
+        account services, portfolio information and
+        market order management.
+      </p>
+
+      <label>Email</label>
+      <input
+        id="email"
+        type="email"
+        autocomplete="username"
+      >
+
+      <label>Password</label>
+      <input
+        id="password"
+        type="password"
+        autocomplete="current-password"
+      >
+
+      <br>
+
+      <button
+        id="loginBtn"
+        style="width:100%;"
+      >
+        Sign In
+      </button>
+
+      <div
+        id="loginStatus"
+        class="status"
+        style="margin-top:15px;"
+      >
+        Ready.
+      </div>
+
+    </div>
   </section>
+
+
   <!-- APPLICATION -->
   <section id="appScreen" class="hidden">
-<header>
-  <div>
-    <div class="brand">APEX WEALTH</div>
-    <div class="paper">PAPER / VIRTUAL TRADING</div>
-  </div>
-  <button id="signOutBtn" class="danger">
-    Sign Out
-  </button>
-</header>
-<!-- ACCOUNT -->
-<div class="card">
-  <div class="row">
-    <strong id="userEmail">—</strong>
-    <span id="roleBadge" class="badge">USER</span>
-    <span id="statusBadge" class="badge">—</span>
-    <span id="kycBadge" class="badge">KYC —</span>
-  </div>
-  <p id="accountMessage" class="muted">
-    Loading account...
-  </p>
-</div>
-<!-- STATS -->
-<div class="grid">
-  <div class="stat">
-    <div class="stat-label">Virtual Cash</div>
-    <div class="stat-value" id="cashValue">$0.00</div>
-  </div>
-  <div class="stat">
-    <div class="stat-label">AAPL Position</div>
-    <div class="stat-value" id="aaplValue">0</div>
-  </div>
-  <div class="stat">
-    <div class="stat-label">Paper Portfolio</div>
-    <div class="stat-value" id="portfolioValue">$0.00</div>
-  </div>
-</div>
-<!-- CUSTOMER TRADING -->
-<div id="customerTrading" class="card">
-  <h3>Paper Order</h3>
-  <p class="muted">
-    Orders created here are virtual paper orders only.
-  </p>
-  <div class="grid">
-    <div>
-      <label>Symbol</label>
-      <input id="orderSymbol" value="AAPL">
-    </div>
-    <div>
-      <label>Side</label>
-      <select id="orderSide">
-        <option value="buy">Buy</option>
-        <option value="sell">Sell</option>
-      </select>
-    </div>
-    <div>
-      <label>Quantity</label>
-      <input
-        id="orderQuantity"
-        type="number"
-        value="1"
-        min="0.00000001"
-        step="0.00000001"
+
+    <header>
+
+      <div>
+        <div class="brand">
+          APEX WEALTH
+        </div>
+
+        <div class="paper">
+          DIGITAL INVESTMENT MANAGEMENT
+        </div>
+      </div>
+
+      <button
+        id="signOutBtn"
+        class="danger"
       >
+        Sign Out
+      </button>
+
+    </header>
+
+
+    <!-- ACCOUNT -->
+    <div class="card">
+
+      <div class="row">
+
+        <strong id="userEmail">—</strong>
+
+        <span
+          id="roleBadge"
+          class="badge"
+        >
+          USER
+        </span>
+
+        <span
+          id="statusBadge"
+          class="badge"
+        >
+          —
+        </span>
+
+        <span
+          id="kycBadge"
+          class="badge"
+        >
+          KYC —
+        </span>
+
+      </div>
+
+      <p
+        id="accountMessage"
+        class="muted"
+      >
+        Loading account...
+      </p>
+
     </div>
-  </div>
-  <label>Limit / Paper Price</label>
-  <input
-    id="orderPrice"
-    type="number"
-    value="225.10"
-    min="0.00000001"
-    step="0.01"
-  >
-  <br>
-  <button id="createOrderBtn">
-    Create Paper Order
-  </button>
-  <div id="orderStatus" class="status">
-    Ready.
-  </div>
-</div>
-<!-- FUNDING -->
-<div id="fundingCard" class="card">
-  <h3>Virtual Funding</h3>
-  <p class="muted">
-    Request virtual/paper funds for the simulator.
-    Requests require administrator approval.
-  </p>
-  <div class="row">
-    <input
-      id="fundAmount"
-      type="number"
-      value="1000"
-      min="1"
-      step="0.01"
-      style="max-width:220px;"
+
+
+    <!-- ACCOUNT STATS -->
+    <div class="grid">
+
+      <div class="stat">
+
+        <div class="stat-label">
+          Available Balance
+        </div>
+
+        <div
+          class="stat-value"
+          id="cashValue"
+        >
+          $0.00
+        </div>
+
+      </div>
+
+
+      <div class="stat">
+
+        <div class="stat-label">
+          Equity Holdings
+        </div>
+
+        <div
+          class="stat-value"
+          id="aaplValue"
+        >
+          0
+        </div>
+
+      </div>
+
+
+      <div class="stat">
+
+        <div class="stat-label">
+          Portfolio Value
+        </div>
+
+        <div
+          class="stat-value"
+          id="portfolioValue"
+        >
+          $0.00
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- CUSTOMER ORDER MANAGEMENT -->
+    <div
+      id="customerTrading"
+      class="card"
     >
-    <button id="fundBtn">
-      Request Virtual Deposit
-    </button>
-  </div>
-  <div id="fundStatus" class="status">
-    Ready.
-  </div>
-</div>
-<!-- ORDERS -->
-<div class="card">
-  <div class="row" style="justify-content:space-between;">
-    <h3>My Orders</h3>
-    <button id="refreshBtn" class="secondary">
-      Refresh
-    </button>
-  </div>
-  <table>
-    <thead>
-      <tr>
-        <th>Symbol</th>
-        <th>Side</th>
-        <th>Qty</th>
-        <th>Price</th>
-        <th>Status</th>
-        <th>Created</th>
-      </tr>
-    </thead>
-    <tbody id="ordersBody">
-      <tr>
-        <td colspan="6">Loading...</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-<!-- ADMIN -->
-<div id="adminPanel" class="card admin-box hidden">
-  <h2>Administrator Desk</h2>
-  <p class="warning">
-    Administrator controls — paper environment only.
-  </p>
-  <h3>Pending Funding Requests</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>User</th>
-        <th>Amount</th>
-        <th>Currency</th>
-        <th>Status</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody id="fundingBody">
-      <tr>
-        <td colspan="5">Loading...</td>
-      </tr>
-    </tbody>
-  </table>
-  <h3 style="margin-top:30px;">
-    Pending Paper Orders
-  </h3>
-  <table>
-    <thead>
-      <tr>
-        <th>User</th>
-        <th>Symbol</th>
-        <th>Side</th>
-        <th>Qty</th>
-        <th>Price</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody id="adminOrdersBody">
-      <tr>
-        <td colspan="6">Loading...</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-<div id="debugOutput" class="output hidden"></div>
+
+      <h3>
+        Order Management
+      </h3>
+
+      <p class="muted">
+        Submit and manage market orders according
+        to your account authorization.
+      </p>
+
+      <div class="grid">
+
+        <div>
+
+          <label>
+            Symbol
+          </label>
+
+          <input
+            id="orderSymbol"
+            value="AAPL"
+          >
+
+        </div>
+
+
+        <div>
+
+          <label>
+            Side
+          </label>
+
+          <select id="orderSide">
+
+            <option value="buy">
+              Buy
+            </option>
+
+            <option value="sell">
+              Sell
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div>
+
+          <label>
+            Quantity
+          </label>
+
+          <input
+            id="orderQuantity"
+            type="number"
+            value="1"
+            min="0.00000001"
+            step="0.00000001"
+          >
+
+        </div>
+
+      </div>
+
+
+      <label>
+        Limit Price
+      </label>
+
+      <input
+        id="orderPrice"
+        type="number"
+        value="225.10"
+        min="0.00000001"
+        step="0.01"
+      >
+
+      <br>
+
+      <button id="createOrderBtn">
+        Submit Order
+      </button>
+
+      <div
+        id="orderStatus"
+        class="status"
+      >
+        Ready.
+      </div>
+
+    </div>
+
+
+    <!-- ACCOUNT FUNDING -->
+    <div
+      id="fundingCard"
+      class="card"
+    >
+
+      <h3>
+        Account Funding
+      </h3>
+
+      <p class="muted">
+        Submit a funding request for account review.
+        Funding requests are subject to administrative
+        approval.
+      </p>
+
+      <div class="row">
+
+        <input
+          id="fundAmount"
+          type="number"
+          value="1000"
+          min="1"
+          step="0.01"
+          style="max-width:220px;"
+        >
+
+        <button id="fundBtn">
+          Request Funding
+        </button>
+
+      </div>
+
+      <div
+        id="fundStatus"
+        class="status"
+      >
+        Ready.
+      </div>
+
+    </div>
+
+
+    <!-- ORDER HISTORY -->
+    <div class="card">
+
+      <div
+        class="row"
+        style="justify-content:space-between;"
+      >
+
+        <h3>
+          Order History
+        </h3>
+
+        <button
+          id="refreshBtn"
+          class="secondary"
+        >
+          Refresh
+        </button>
+
+      </div>
+
+      <table>
+
+        <thead>
+
+          <tr>
+
+            <th>
+              Symbol
+            </th>
+
+            <th>
+              Side
+            </th>
+
+            <th>
+              Quantity
+            </th>
+
+            <th>
+              Price
+            </th>
+
+            <th>
+              Execution Status
+            </th>
+
+            <th>
+              Date Created
+            </th>
+
+          </tr>
+
+        </thead>
+
+        <tbody id="ordersBody">
+
+          <tr>
+            <td colspan="6">
+              Loading...
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+
+    <!-- ADMINISTRATION -->
+    <div
+      id="adminPanel"
+      class="card admin-box hidden"
+    >
+
+      <h2>
+        Administration
+      </h2>
+
+      <p class="warning">
+        Administrative controls and account
+        authorization management.
+      </p>
+
+
+      <h3>
+        Funding Requests
+      </h3>
+
+      <table>
+
+        <thead>
+
+          <tr>
+
+            <th>
+              User
+            </th>
+
+            <th>
+              Amount
+            </th>
+
+            <th>
+              Currency
+            </th>
+
+            <th>
+              Status
+            </th>
+
+            <th>
+              Action
+            </th>
+
+          </tr>
+
+        </thead>
+
+        <tbody id="fundingBody">
+
+          <tr>
+            <td colspan="5">
+              Loading...
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+
+      <h3 style="margin-top:30px;">
+        Pending Orders
+      </h3>
+
+      <table>
+
+        <thead>
+
+          <tr>
+
+            <th>
+              User
+            </th>
+
+            <th>
+              Symbol
+            </th>
+
+            <th>
+              Side
+            </th>
+
+            <th>
+              Quantity
+            </th>
+
+            <th>
+              Price
+            </th>
+
+            <th>
+              Action
+            </th>
+
+          </tr>
+
+        </thead>
+
+        <tbody id="adminOrdersBody">
+
+          <tr>
+            <td colspan="6">
+              Loading...
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+
+    <div
+      id="debugOutput"
+      class="output hidden"
+    ></div>
+
   </section>
+
 </div>
+
+
 <script>
+
 const SUPABASE_URL =
   'https://ugplolnnklwiymryduii.supabase.co';
+
 const SUPABASE_PUBLISHABLE_KEY =
   'sb_publishable_2es_s2SFatFs0WrOC6ipnw_pqwyfIW1';
+
 const supabaseClient =
   window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_PUBLISHABLE_KEY
   );
+
+
 let currentUser = null;
 let currentProfile = null;
+
+
 /* =========================================================
    HELPERS
 ========================================================= */
+
 function money(value) {
-  const n = Number(value || 0);
-  return n.toLocaleString('en-US', {
-    style: 'currency',
-    currency: 'USD'
-  });
+
+  const n =
+    Number(value || 0);
+
+  return n.toLocaleString(
+    'en-US',
+    {
+      style: 'currency',
+      currency: 'USD'
+    }
+  );
+
 }
+
+
 function escapeHtml(value) {
+
   return String(value ?? '')
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;');
+
 }
-function setStatus(id, message, type = '') {
-  const el = document.getElementById(id);
+
+
+function setStatus(
+  id,
+  message,
+  type = ''
+) {
+
+  const el =
+    document.getElementById(id);
+
   if (!el) return;
-  el.textContent = message;
-  el.className = 'status';
+
+  el.textContent =
+    message;
+
+  el.className =
+    'status';
+
   if (type) {
     el.classList.add(type);
   }
+
 }
+
+
 function showDebug(data) {
+
   const el =
-    document.getElementById('debugOutput');
-  el.classList.remove('hidden');
+    document.getElementById(
+      'debugOutput'
+    );
+
+  el.classList.remove(
+    'hidden'
+  );
+
   el.textContent =
-    JSON.stringify(data, null, 2);
+    JSON.stringify(
+      data,
+      null,
+      2
+    );
+
 }
-function makeIdempotencyKey(prefix) {
+
+
+function makeIdempotencyKey(
+  prefix
+) {
+
   return (
     prefix +
     '-' +
@@ -437,36 +860,54 @@ function makeIdempotencyKey(prefix) {
     '-' +
     crypto.randomUUID()
   );
+
 }
+
+
 /* =========================================================
    LOGIN
 ========================================================= */
+
 document
   .getElementById('loginBtn')
-  .addEventListener('click', login);
+  .addEventListener(
+    'click',
+    login
+  );
+
+
 async function login() {
+
   setStatus(
     'loginStatus',
     'Signing in...'
   );
+
   const email =
     document
       .getElementById('email')
       .value
       .trim();
+
   const password =
     document
       .getElementById('password')
       .value;
+
   if (!email || !password) {
+
     setStatus(
       'loginStatus',
       'Email and password are required.',
       'error'
     );
+
     return;
+
   }
+
   try {
+
     const {
       data,
       error
@@ -476,28 +917,44 @@ async function login() {
           email,
           password
         });
+
     if (error) {
+
       setStatus(
         'loginStatus',
         error.message,
         'error'
       );
+
       return;
+
     }
-    currentUser = data.user;
+
+    currentUser =
+      data.user;
+
     await loadApplication();
+
   } catch (err) {
+
     setStatus(
       'loginStatus',
-      err.message || String(err),
+      err.message ||
+      String(err),
       'error'
     );
+
   }
+
 }
+
+
 /* =========================================================
    LOAD APPLICATION
 ========================================================= */
+
 async function loadApplication() {
+
   const {
     data,
     error
@@ -512,36 +969,79 @@ async function loadApplication() {
         kyc_status,
         kyc_tier
       `)
-      .eq('id', currentUser.id)
+      .eq(
+        'id',
+        currentUser.id
+      )
       .single();
+
+
   if (error) {
+
     setStatus(
       'loginStatus',
-      'Unable to load profile: ' + error.message,
+      'Unable to load account profile: ' +
+      error.message,
       'error'
     );
-    await supabaseClient.auth.signOut();
+
+    await supabaseClient
+      .auth
+      .signOut();
+
     return;
+
   }
-  currentProfile = data;
+
+
+  currentProfile =
+    data;
+
+
   document
-    .getElementById('loginScreen')
-    .classList.add('hidden');
+    .getElementById(
+      'loginScreen'
+    )
+    .classList.add(
+      'hidden'
+    );
+
+
   document
-    .getElementById('appScreen')
-    .classList.remove('hidden');
+    .getElementById(
+      'appScreen'
+    )
+    .classList.remove(
+      'hidden'
+    );
+
+
   document
-    .getElementById('userEmail')
+    .getElementById(
+      'userEmail'
+    )
     .textContent =
       currentProfile.email ||
       currentUser.email;
+
+
   const roleBadge =
-    document.getElementById('roleBadge');
+    document.getElementById(
+      'roleBadge'
+    );
+
+
   const isAdmin =
     currentProfile.role === 'admin' &&
     currentProfile.status !== 'blocked';
+
+
   roleBadge.textContent =
-    isAdmin ? 'ADMIN' : 'USER';
+    isAdmin
+      ? 'ADMIN'
+      : 'USER';
+
+
   roleBadge.className =
     'badge ' +
     (
@@ -549,218 +1049,423 @@ async function loadApplication() {
         ? 'admin-badge'
         : 'user-badge'
     );
+
+
   const statusBadge =
-    document.getElementById('statusBadge');
+    document.getElementById(
+      'statusBadge'
+    );
+
+
   statusBadge.textContent =
     'STATUS: ' +
-    String(currentProfile.status || '')
-      .toUpperCase();
+    String(
+      currentProfile.status || ''
+    ).toUpperCase();
+
+
   document
-    .getElementById('kycBadge')
+    .getElementById(
+      'kycBadge'
+    )
     .textContent =
-      'KYC TIER ' +
-      String(currentProfile.kyc_tier || 1);
-  if (currentProfile.status === 'approved') {
-    document
-      .getElementById('accountMessage')
-      .textContent =
-        'Your account is approved for paper trading.';
-  } else if (
-    currentProfile.status === 'blocked'
+      'VERIFICATION TIER ' +
+      String(
+        currentProfile.kyc_tier || 1
+      );
+
+
+  if (
+    currentProfile.status ===
+    'approved'
   ) {
+
     document
-      .getElementById('accountMessage')
+      .getElementById(
+        'accountMessage'
+      )
       .textContent =
-        'Your account is blocked.';
+        'Your account is approved for authorized market operations.';
+
+  } else if (
+    currentProfile.status ===
+    'blocked'
+  ) {
+
+    document
+      .getElementById(
+        'accountMessage'
+      )
+      .textContent =
+        'Your account access is currently restricted.';
+
   } else {
+
     document
-      .getElementById('accountMessage')
+      .getElementById(
+        'accountMessage'
+      )
       .textContent =
-        'Your account is pending administrator approval.';
+        'Your account is currently under administrative review.';
+
   }
+
+
   if (isAdmin) {
+
     document
-      .getElementById('adminPanel')
-      .classList.remove('hidden');
+      .getElementById(
+        'adminPanel'
+      )
+      .classList.remove(
+        'hidden'
+      );
+
     document
-      .getElementById('customerTrading')
-      .classList.add('hidden');
+      .getElementById(
+        'customerTrading'
+      )
+      .classList.add(
+        'hidden'
+      );
+
     document
-      .getElementById('fundingCard')
-      .classList.add('hidden');
+      .getElementById(
+        'fundingCard'
+      )
+      .classList.add(
+        'hidden'
+      );
+
     await loadAdminData();
+
   } else {
+
     document
-      .getElementById('adminPanel')
-      .classList.add('hidden');
+      .getElementById(
+        'adminPanel'
+      )
+      .classList.add(
+        'hidden'
+      );
+
     await loadCustomerData();
+
   }
+
 }
+
+
 /* =========================================================
    CUSTOMER DATA
 ========================================================= */
+
 async function loadCustomerData() {
+
   await Promise.all([
     loadCash(),
     loadPositions(),
     loadOrders()
   ]);
+
 }
+
+
 /* =========================================================
-   CASH BALANCE
+   AVAILABLE BALANCE
 ========================================================= */
+
 async function loadCash() {
+
   const cashEl =
-    document.getElementById('cashValue');
-  cashEl.textContent = 'Loading...';
-  /*
-    USER_CASH is a liability account.
-    Therefore:
-      Customer available cash
-      = total credits - total debits
-    For the current test account:
-      Credits: $2,000.00
-      Debits:    $225.10
-      -------------------
-      Balance: $1,774.90
-  */
+    document.getElementById(
+      'cashValue'
+    );
+
+  cashEl.textContent =
+    'Loading...';
+
+
   const {
     data: account,
     error: accountError
   } =
     await supabaseClient
       .from('ledger_accounts')
-      .select('id, code, currency')
-      .eq('owner_user_id', currentUser.id)
-      .eq('code', 'USER_CASH')
-      .eq('currency', 'USD')
+      .select(
+        'id, code, currency'
+      )
+      .eq(
+        'owner_user_id',
+        currentUser.id
+      )
+      .eq(
+        'code',
+        'USER_CASH'
+      )
+      .eq(
+        'currency',
+        'USD'
+      )
       .maybeSingle();
+
+
   if (accountError) {
-    cashEl.textContent = '$0.00';
+
+    cashEl.textContent =
+      '$0.00';
+
     setStatus(
       'fundStatus',
-      'Cash account could not be loaded: ' +
+      'Account balance could not be loaded: ' +
       accountError.message,
       'error'
     );
+
     showDebug({
-      step: 'LOAD_CASH_ACCOUNT',
-      success: false,
-      error: accountError.message
+      step:
+        'LOAD_CASH_ACCOUNT',
+      success:
+        false,
+      error:
+        accountError.message
     });
+
     return;
+
   }
+
+
   if (!account) {
-    cashEl.textContent = '$0.00';
+
+    cashEl.textContent =
+      '$0.00';
+
     setStatus(
       'fundStatus',
-      'USER_CASH account was not found.',
+      'Account balance record was not found.',
       'error'
     );
+
     showDebug({
-      step: 'LOAD_CASH_ACCOUNT',
-      success: false,
-      error: 'USER_CASH account not found'
+      step:
+        'LOAD_CASH_ACCOUNT',
+      success:
+        false,
+      error:
+        'USER_CASH account not found'
     });
+
     return;
+
   }
+
+
   const {
     data: lines,
     error: lineError
   } =
     await supabaseClient
       .from('journal_lines')
-      .select('debit, credit, currency')
-      .eq('ledger_account_id', account.id)
-      .eq('currency', 'USD');
+      .select(
+        'debit, credit, currency'
+      )
+      .eq(
+        'ledger_account_id',
+        account.id
+      )
+      .eq(
+        'currency',
+        'USD'
+      );
+
+
   if (lineError) {
-    cashEl.textContent = '$0.00';
+
+    cashEl.textContent =
+      '$0.00';
+
     setStatus(
       'fundStatus',
-      'Cash ledger could not be loaded: ' +
+      'Account balance could not be loaded: ' +
       lineError.message,
       'error'
     );
+
     showDebug({
-      step: 'LOAD_CASH_LINES',
-      success: false,
-      account_id: account.id,
-      error: lineError.message
+      step:
+        'LOAD_CASH_LINES',
+      success:
+        false,
+      account_id:
+        account.id,
+      error:
+        lineError.message
     });
+
     return;
+
   }
+
+
   let totalCredits = 0;
   let totalDebits = 0;
-  for (const line of lines || []) {
+
+
+  for (
+    const line of lines || []
+  ) {
+
     totalCredits +=
-      Number(line.credit || 0);
+      Number(
+        line.credit || 0
+      );
+
     totalDebits +=
-      Number(line.debit || 0);
+      Number(
+        line.debit || 0
+      );
+
   }
+
+
   const balance =
-    totalCredits - totalDebits;
+    totalCredits -
+    totalDebits;
+
+
   cashEl.textContent =
-    money(Math.max(0, balance));
+    money(
+      Math.max(
+        0,
+        balance
+      )
+    );
+
+
   showDebug({
-    step: 'LOAD_CASH',
-    success: true,
-    account_id: account.id,
-    total_credits: totalCredits,
-    total_debits: totalDebits,
-    cash_balance: balance
+    step:
+      'LOAD_CASH',
+    success:
+      true,
+    account_id:
+      account.id,
+    total_credits:
+      totalCredits,
+    total_debits:
+      totalDebits,
+    cash_balance:
+      balance
   });
+
 }
+
+
 /* =========================================================
-   POSITIONS
+   PORTFOLIO POSITIONS
 ========================================================= */
+
 async function loadPositions() {
+
   const {
     data,
     error
   } =
     await supabaseClient
-      .from('portfolio_positions')
+      .from(
+        'portfolio_positions'
+      )
       .select(`
         symbol,
         quantity,
         market_value
       `)
-      .eq('user_id', currentUser.id);
+      .eq(
+        'user_id',
+        currentUser.id
+      );
+
+
   if (error) {
+
     document
-      .getElementById('aaplValue')
-      .textContent = '0';
+      .getElementById(
+        'aaplValue'
+      )
+      .textContent =
+        '0';
+
     document
-      .getElementById('portfolioValue')
-      .textContent = '$0.00';
+      .getElementById(
+        'portfolioValue'
+      )
+      .textContent =
+        '$0.00';
+
     return;
+
   }
+
+
   let aapl = 0;
   let portfolio = 0;
-  for (const position of data || []) {
+
+
+  for (
+    const position of data || []
+  ) {
+
     portfolio +=
-      Number(position.market_value || 0);
+      Number(
+        position.market_value || 0
+      );
+
+
     if (
-      String(position.symbol)
-        .toUpperCase() === 'AAPL'
+      String(
+        position.symbol
+      ).toUpperCase() ===
+      'AAPL'
     ) {
+
       aapl =
-        Number(position.quantity || 0);
+        Number(
+          position.quantity || 0
+        );
+
     }
+
   }
+
+
   document
-    .getElementById('aaplValue')
+    .getElementById(
+      'aaplValue'
+    )
     .textContent =
-      aapl.toLocaleString('en-US');
+      aapl.toLocaleString(
+        'en-US'
+      );
+
+
   document
-    .getElementById('portfolioValue')
+    .getElementById(
+      'portfolioValue'
+    )
     .textContent =
-      money(portfolio);
+      money(
+        portfolio
+      );
+
 }
+
+
 /* =========================================================
-   ORDERS
+   ORDER HISTORY
 ========================================================= */
+
 async function loadOrders() {
+
   const {
     data,
     error
@@ -775,112 +1480,221 @@ async function loadOrders() {
         status,
         created_at
       `)
-      .eq('user_id', currentUser.id)
-      .order('created_at', {
-        ascending: false
-      })
+      .eq(
+        'user_id',
+        currentUser.id
+      )
+      .order(
+        'created_at',
+        {
+          ascending: false
+        }
+      )
       .limit(50);
+
+
   const body =
-    document.getElementById('ordersBody');
+    document.getElementById(
+      'ordersBody'
+    );
+
+
   if (error) {
+
     body.innerHTML =
       `<tr><td colspan="6">
         Unable to load orders:
-        ${escapeHtml(error.message)}
+        ${escapeHtml(
+          error.message
+        )}
       </td></tr>`;
+
     return;
+
   }
-  if (!data || data.length === 0) {
+
+
+  if (
+    !data ||
+    data.length === 0
+  ) {
+
     body.innerHTML =
       `<tr><td colspan="6">
         No orders found.
       </td></tr>`;
+
     return;
+
   }
+
+
   body.innerHTML =
-    data.map(order => `
-      <tr>
-        <td>${escapeHtml(order.symbol)}</td>
-        <td>${escapeHtml(order.side)}</td>
-        <td>${escapeHtml(order.quantity)}</td>
-        <td>${money(order.limit_price)}</td>
-        <td>${escapeHtml(order.status)}</td>
-        <td>
-          ${new Date(order.created_at)
-            .toLocaleString()}
-        </td>
-      </tr>
-    `).join('');
+    data
+      .map(
+        order => `
+          <tr>
+
+            <td>
+              ${escapeHtml(
+                order.symbol
+              )}
+            </td>
+
+            <td>
+              ${escapeHtml(
+                order.side
+              )}
+            </td>
+
+            <td>
+              ${escapeHtml(
+                order.quantity
+              )}
+            </td>
+
+            <td>
+              ${money(
+                order.limit_price
+              )}
+            </td>
+
+            <td>
+              ${escapeHtml(
+                order.status
+              )}
+            </td>
+
+            <td>
+              ${
+                new Date(
+                  order.created_at
+                ).toLocaleString()
+              }
+            </td>
+
+          </tr>
+        `
+      )
+      .join('');
+
 }
+
+
 /* =========================================================
-   CREATE ORDER
+   SUBMIT ORDER
 ========================================================= */
+
 document
-  .getElementById('createOrderBtn')
+  .getElementById(
+    'createOrderBtn'
+  )
   .addEventListener(
     'click',
     createOrder
   );
+
+
 async function createOrder() {
+
   if (!currentUser) {
+
     setStatus(
       'orderStatus',
       'Please sign in first.',
       'error'
     );
+
     return;
+
   }
+
+
   if (
     !currentProfile ||
-    currentProfile.status !== 'approved'
+    currentProfile.status !==
+      'approved'
   ) {
+
     setStatus(
       'orderStatus',
-      'Account is not approved for trading.',
+      'Account authorization is required before submitting orders.',
       'error'
     );
+
     return;
+
   }
+
+
   const symbol =
     document
-      .getElementById('orderSymbol')
+      .getElementById(
+        'orderSymbol'
+      )
       .value
       .trim();
+
+
   const side =
     document
-      .getElementById('orderSide')
+      .getElementById(
+        'orderSide'
+      )
       .value;
+
+
   const quantity =
     Number(
       document
-        .getElementById('orderQuantity')
+        .getElementById(
+          'orderQuantity'
+        )
         .value
     );
+
+
   const price =
     Number(
       document
-        .getElementById('orderPrice')
+        .getElementById(
+          'orderPrice'
+        )
         .value
     );
+
+
   if (
     !symbol ||
-    !Number.isFinite(quantity) ||
+    !Number.isFinite(
+      quantity
+    ) ||
     quantity <= 0 ||
-    !Number.isFinite(price) ||
+    !Number.isFinite(
+      price
+    ) ||
     price <= 0
   ) {
+
     setStatus(
       'orderStatus',
       'Enter a valid symbol, quantity and price.',
       'error'
     );
+
     return;
+
   }
+
+
   setStatus(
     'orderStatus',
-    'Creating paper order...'
+    'Submitting order...'
   );
+
+
   try {
+
     const {
       data,
       error
@@ -888,70 +1702,115 @@ async function createOrder() {
       await supabaseClient.rpc(
         'create_order',
         {
-          p_symbol: symbol,
-          p_side: side,
-          p_quantity: quantity,
-          p_limit_price: price,
+          p_symbol:
+            symbol,
+          p_side:
+            side,
+          p_quantity:
+            quantity,
+          p_limit_price:
+            price,
           p_idempotency_key:
-            makeIdempotencyKey('WEB-ORDER'),
-          p_take_profit: null,
-          p_stop_loss: null
+            makeIdempotencyKey(
+              'WEB-ORDER'
+            ),
+          p_take_profit:
+            null,
+          p_stop_loss:
+            null
         }
       );
+
+
     if (error) {
+
       setStatus(
         'orderStatus',
         error.message,
         'error'
       );
+
       return;
+
     }
+
+
     setStatus(
       'orderStatus',
-      'Paper order created successfully. Order ID: ' + data,
+      'Order submitted successfully. Order ID: ' +
+      data,
       'success'
     );
+
+
     await loadCustomerData();
+
   } catch (err) {
+
     setStatus(
       'orderStatus',
-      err.message || String(err),
+      err.message ||
+      String(err),
       'error'
     );
+
   }
+
 }
+
+
 /* =========================================================
-   FUNDING REQUEST
+   ACCOUNT FUNDING REQUEST
 ========================================================= */
+
 document
-  .getElementById('fundBtn')
+  .getElementById(
+    'fundBtn'
+  )
   .addEventListener(
     'click',
     requestFunding
   );
+
+
 async function requestFunding() {
+
   const amount =
     Number(
       document
-        .getElementById('fundAmount')
+        .getElementById(
+          'fundAmount'
+        )
         .value
     );
+
+
   if (
-    !Number.isFinite(amount) ||
+    !Number.isFinite(
+      amount
+    ) ||
     amount <= 0
   ) {
+
     setStatus(
       'fundStatus',
       'Enter a valid amount.',
       'error'
     );
+
     return;
+
   }
+
+
   setStatus(
     'fundStatus',
-    'Submitting virtual funding request...'
+    'Submitting funding request...'
   );
+
+
   try {
+
     const {
       data,
       error
@@ -959,56 +1818,87 @@ async function requestFunding() {
       await supabaseClient.rpc(
         'create_funding_request',
         {
-          p_type: 'deposit',
-          p_amount: amount,
-          p_currency: 'USD',
+          p_type:
+            'deposit',
+          p_amount:
+            amount,
+          p_currency:
+            'USD',
           p_idempotency_key:
-            makeIdempotencyKey('WEB-DEPOSIT'),
+            makeIdempotencyKey(
+              'WEB-DEPOSIT'
+            ),
           p_note:
-            'Virtual paper funding request'
+            'Account funding request'
         }
       );
+
+
     if (error) {
+
       setStatus(
         'fundStatus',
         error.message,
         'error'
       );
+
       return;
+
     }
+
+
     setStatus(
       'fundStatus',
-      'Virtual funding request submitted. Request ID: ' + data,
+      'Funding request submitted successfully. Request ID: ' +
+      data,
       'success'
     );
+
+
     await loadCash();
+
   } catch (err) {
+
     setStatus(
       'fundStatus',
-      err.message || String(err),
+      err.message ||
+      String(err),
       'error'
     );
+
   }
+
 }
+
+
 /* =========================================================
-   ADMIN DATA
+   ADMINISTRATION
 ========================================================= */
+
 async function loadAdminData() {
+
   await Promise.all([
     loadAdminFunding(),
     loadAdminOrders()
   ]);
+
 }
+
+
 /* =========================================================
-   ADMIN FUNDING
+   FUNDING REQUESTS
 ========================================================= */
+
 async function loadAdminFunding() {
+
   const {
     data,
     error
   } =
     await supabaseClient
-      .from('funding_requests')
+      .from(
+        'funding_requests'
+      )
       .select(`
         id,
         user_id,
@@ -1017,56 +1907,123 @@ async function loadAdminFunding() {
         status,
         created_at
       `)
-      .eq('status', 'pending')
-      .order('created_at', {
-        ascending: false
-      });
+      .eq(
+        'status',
+        'pending'
+      )
+      .order(
+        'created_at',
+        {
+          ascending: false
+        }
+      );
+
+
   const body =
-    document.getElementById('fundingBody');
+    document.getElementById(
+      'fundingBody'
+    );
+
+
   if (error) {
+
     body.innerHTML =
       `<tr><td colspan="5">
         Unable to load funding requests:
-        ${escapeHtml(error.message)}
+        ${escapeHtml(
+          error.message
+        )}
       </td></tr>`;
+
     return;
+
   }
-  if (!data || data.length === 0) {
+
+
+  if (
+    !data ||
+    data.length === 0
+  ) {
+
     body.innerHTML =
       `<tr><td colspan="5">
         No pending funding requests.
       </td></tr>`;
+
     return;
+
   }
+
+
   body.innerHTML =
-    data.map(request => `
-      <tr>
-        <td>${escapeHtml(request.user_id)}</td>
-        <td>${money(request.amount)}</td>
-        <td>${escapeHtml(request.currency)}</td>
-        <td>${escapeHtml(request.status)}</td>
-        <td>
-          <button
-            onclick="approveFunding('${request.id}')"
-          >
-            Approve
-          </button>
-        </td>
-      </tr>
-    `).join('');
+    data
+      .map(
+        request => `
+          <tr>
+
+            <td>
+              ${escapeHtml(
+                request.user_id
+              )}
+            </td>
+
+            <td>
+              ${money(
+                request.amount
+              )}
+            </td>
+
+            <td>
+              ${escapeHtml(
+                request.currency
+              )}
+            </td>
+
+            <td>
+              ${escapeHtml(
+                request.status
+              )}
+            </td>
+
+            <td>
+
+              <button
+                onclick="approveFunding('${request.id}')"
+              >
+                Approve Request
+              </button>
+
+            </td>
+
+          </tr>
+        `
+      )
+      .join('');
+
 }
+
+
 /* =========================================================
-   ADMIN APPROVE FUNDING
+   APPROVE FUNDING
 ========================================================= */
-async function approveFunding(requestId) {
+
+async function approveFunding(
+  requestId
+) {
+
   if (
     !confirm(
-      'Approve this virtual funding request?'
+      'Approve this account funding request?'
     )
   ) {
+
     return;
+
   }
+
+
   try {
+
     const {
       data,
       error
@@ -1074,31 +2031,51 @@ async function approveFunding(requestId) {
       await supabaseClient.rpc(
         'admin_review_funding',
         {
-          p_request_id: requestId,
-          p_status: 'approved'
+          p_request_id:
+            requestId,
+          p_status:
+            'approved'
         }
       );
+
+
     if (error) {
+
       alert(
         'Funding approval failed: ' +
         error.message
       );
+
       return;
+
     }
+
+
     alert(
-      'Virtual funding approved.'
+      'Funding request approved.'
     );
+
+
     await loadAdminData();
+
   } catch (err) {
+
     alert(
-      err.message || String(err)
+      err.message ||
+      String(err)
     );
+
   }
+
 }
+
+
 /* =========================================================
-   ADMIN ORDERS
+   PENDING ORDERS
 ========================================================= */
+
 async function loadAdminOrders() {
+
   const {
     data,
     error
@@ -1115,69 +2092,137 @@ async function loadAdminOrders() {
         status,
         created_at
       `)
-      .eq('status', 'pending')
-      .order('created_at', {
-        ascending: false
-      });
+      .eq(
+        'status',
+        'pending'
+      )
+      .order(
+        'created_at',
+        {
+          ascending: false
+        }
+      );
+
+
   const body =
     document.getElementById(
       'adminOrdersBody'
     );
+
+
   if (error) {
+
     body.innerHTML =
       `<tr><td colspan="6">
         Unable to load orders:
-        ${escapeHtml(error.message)}
+        ${escapeHtml(
+          error.message
+        )}
       </td></tr>`;
+
     return;
+
   }
-  if (!data || data.length === 0) {
+
+
+  if (
+    !data ||
+    data.length === 0
+  ) {
+
     body.innerHTML =
       `<tr><td colspan="6">
-        No pending paper orders.
+        No pending orders.
       </td></tr>`;
+
     return;
+
   }
+
+
   body.innerHTML =
-    data.map(order => `
-      <tr>
-        <td>${escapeHtml(order.user_id)}</td>
-        <td>${escapeHtml(order.symbol)}</td>
-        <td>${escapeHtml(order.side)}</td>
-        <td>${escapeHtml(order.quantity)}</td>
-        <td>${money(order.limit_price)}</td>
-        <td>
-          <button
-            onclick="executeOrder(
-              '${order.id}',
-              '${order.quantity}',
-              '${order.limit_price}'
-            )"
-          >
-            Execute
-          </button>
-        </td>
-      </tr>
-    `).join('');
+    data
+      .map(
+        order => `
+          <tr>
+
+            <td>
+              ${escapeHtml(
+                order.user_id
+              )}
+            </td>
+
+            <td>
+              ${escapeHtml(
+                order.symbol
+              )}
+            </td>
+
+            <td>
+              ${escapeHtml(
+                order.side
+              )}
+            </td>
+
+            <td>
+              ${escapeHtml(
+                order.quantity
+              )}
+            </td>
+
+            <td>
+              ${money(
+                order.limit_price
+              )}
+            </td>
+
+            <td>
+
+              <button
+                onclick="executeOrder(
+                  '${order.id}',
+                  '${order.quantity}',
+                  '${order.limit_price}'
+                )"
+              >
+                Execute Order
+              </button>
+
+            </td>
+
+          </tr>
+        `
+      )
+      .join('');
+
 }
+
+
 /* =========================================================
-   ADMIN EXECUTE ORDER
+   EXECUTE ORDER
 ========================================================= */
+
 async function executeOrder(
   orderId,
   quantity,
   price
 ) {
+
   if (
     !confirm(
-      'Execute this paper order at $' +
+      'Execute this order at $' +
       Number(price).toFixed(2) +
       '?'
     )
   ) {
+
     return;
+
   }
+
+
   try {
+
     const {
       data,
       error
@@ -1185,101 +2230,188 @@ async function executeOrder(
       await supabaseClient.rpc(
         'execute_order',
         {
-          p_order_id: orderId,
-          p_execution_price: Number(price),
-          p_execution_quantity: Number(quantity),
+          p_order_id:
+            orderId,
+          p_execution_price:
+            Number(price),
+          p_execution_quantity:
+            Number(quantity),
           p_idempotency_key:
-            makeIdempotencyKey('WEB-EXECUTION')
+            makeIdempotencyKey(
+              'WEB-EXECUTION'
+            )
         }
       );
+
+
     if (error) {
+
       alert(
         'Execution failed: ' +
         error.message
       );
+
       return;
+
     }
+
+
     alert(
-      'Paper order executed successfully.\n\nExecution ID: ' +
+      'Order executed successfully.\n\nExecution ID: ' +
       data
     );
+
+
     await loadAdminData();
+
   } catch (err) {
+
     alert(
-      err.message || String(err)
+      err.message ||
+      String(err)
     );
+
   }
+
 }
+
+
 /* =========================================================
    REFRESH
 ========================================================= */
+
 document
-  .getElementById('refreshBtn')
+  .getElementById(
+    'refreshBtn'
+  )
   .addEventListener(
     'click',
     async function () {
-      if (!currentUser) return;
+
+      if (!currentUser)
+        return;
+
+
       if (
         currentProfile &&
-        currentProfile.role === 'admin'
+        currentProfile.role ===
+          'admin'
       ) {
+
         await loadAdminData();
+
       } else {
+
         await loadCustomerData();
+
       }
+
     }
   );
+
+
 /* =========================================================
    SIGN OUT
 ========================================================= */
+
 document
-  .getElementById('signOutBtn')
+  .getElementById(
+    'signOutBtn'
+  )
   .addEventListener(
     'click',
     async function () {
-      await supabaseClient.auth.signOut();
-      currentUser = null;
-      currentProfile = null;
+
+      await supabaseClient
+        .auth
+        .signOut();
+
+
+      currentUser =
+        null;
+
+      currentProfile =
+        null;
+
+
       document
-        .getElementById('appScreen')
-        .classList.add('hidden');
+        .getElementById(
+          'appScreen'
+        )
+        .classList.add(
+          'hidden'
+        );
+
+
       document
-        .getElementById('loginScreen')
-        .classList.remove('hidden');
+        .getElementById(
+          'loginScreen'
+        )
+        .classList.remove(
+          'hidden'
+        );
+
+
       document
-        .getElementById('password')
-        .value = '';
+        .getElementById(
+          'password'
+        )
+        .value =
+          '';
+
+
       setStatus(
         'loginStatus',
         'Signed out successfully.',
         'success'
       );
+
     }
   );
+
+
 /* =========================================================
    EXISTING SESSION
 ========================================================= */
+
 (async function boot() {
+
   try {
+
     const {
       data
     } =
-      await supabaseClient.auth
+      await supabaseClient
+        .auth
         .getSession();
+
+
     if (data.session) {
+
       currentUser =
         data.session.user;
+
       await loadApplication();
+
     }
+
   } catch (err) {
+
     setStatus(
       'loginStatus',
       'Startup error: ' +
-      (err.message || String(err)),
+      (
+        err.message ||
+        String(err)
+      ),
       'error'
     );
+
   }
+
 })();
+
 </script>
+
 </body>
 </html>
